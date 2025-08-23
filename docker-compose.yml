@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/onam_db
+    depends_on:
+      - db
+      - redis
+    command: python manage.py runserver 0.0.0.0:8000
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=onam_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: .
+    command: celery -A onam_project worker --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/onam_db
+    depends_on:
+      - db
+      - redis
+
+  celery-beat:
+    build: .
+    command: celery -A onam_project beat --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/onam_db
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data:
+  static_volume:

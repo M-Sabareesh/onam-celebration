@@ -1,0 +1,87 @@
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "onam_project.settings.testing"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--reuse-db",
+    "--nomigrations",
+    "--cov=apps",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--strict-markers",
+    "-v"
+]
+
+[tool.coverage.run]
+source = "apps"
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/venv/*",
+    "manage.py",
+    "*/settings/*",
+    "*/wsgi.py",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\bProtocol\):",
+    "@(abc\.)?abstractmethod",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_django = "django"
+known_first_party = "apps,onam_project"
+sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
+[tool.flake8]
+max-line-length = 88
+select = ["E", "W", "F"]
+ignore = [
+    "E203",  # whitespace before ':'
+    "E501",  # line too long
+    "W503",  # line break before binary operator
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "migrations",
+    "build",
+    "dist"
+]

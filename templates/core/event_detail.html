@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% load core_extras %}
+
+{% block title %}{{ event.name }} - Team Competition{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:events_list' %}">Events</a></li>
+                    <li class="breadcrumb-item active">{{ event.name }}</li>
+                </ol>
+            </nav>
+            
+            <div class="text-center mb-4">
+                <h1 class="display-4 text-primary">
+                    {% if event.event_type == 'group_dance' %}
+                        <i class="fas fa-music me-2"></i>
+                    {% else %}
+                        <i class="fas fa-microphone me-2"></i>
+                    {% endif %}
+                    {{ event.name }}
+                </h1>
+                <p class="lead text-muted">{{ event.get_event_type_display }}</p>
+                {% if player %}
+                    <p class="text-muted">Player: <strong>{{ player.name }}</strong> | Team: <strong>{{ player.get_team_display }}</strong></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5>{{ event.description|default:"Team competition event" }}</h5>
+                            <div class="mt-2">
+                                <span class="badge bg-info me-2">{{ event.get_event_type_display }}</span>
+                                {% if event.voting_enabled %}
+                                    <span class="badge bg-success">Voting Open</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Voting Closed</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            {% if can_vote %}
+                                <span class="badge bg-success fs-6">
+                                    <i class="fas fa-vote-yea me-1"></i>
+                                    You Can Vote!
+                                </span>
+                            {% elif user_team and user_team in participating_teams %}
+                                <span class="badge bg-info fs-6">
+                                    <i class="fas fa-users me-1"></i>
+                                    Your Team Participating
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Participating Teams -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Participating Teams
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if participating_teams %}
+                        <div class="row">
+                            {% for team in participating_teams %}
+                                <div class="col-md-3 mb-3">
+                                    <div class="card border-primary">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">{{ team_choices|get_item:team }}</h6>
+                                            {% if team == user_team %}
+                                                <span class="badge bg-success">Your Team</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No teams registered for this event yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Scores -->
+    {% if event.voting_enabled and scores %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Current Scores <small id="last-updated" class="text-muted"></small>
+                        </h5>
+                    </div>
+                    <div class="card-body" id="scores-container">
+                        <div class="row">
+                            {% for team, team_scores in scores.items %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border-primary">
+                                        <div class="card-header bg-primary text-white">
+                                            <h6 class="mb-0">{{ team_choices|get_item:team }}</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col-6">
+                                                    <small class="text-muted">Coordination</small>
+                                                    <br>
+                                                    <strong class="text-primary">{{ team_scores.coordination }}/10</strong>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted">Selection</small>
+                                                    <br>
+                                                    <strong class="text-primary">{{ team_scores.selection }}/10</strong>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted">Overall</small>
+                                                    <br>
+                                                    <strong class="text-primary">{{ team_scores.overall }}/10</strong>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted">Enjoyment</small>
+                                                    <br>
+                                                    <strong class="text-primary">{{ team_scores.enjoyment }}/10</strong>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <div class="text-center">
+                                                <h5 class="text-success mb-0">
+                                                    Total: {{ team_scores.total }}/10
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Voting Section -->
+    {% if can_vote and votable_teams %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-vote-yea me-2"></i>
+                            Cast Your Votes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Voting Instructions:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Group Coordination:</strong> How well did the team work together?</li>
+                                <li><strong>{% if event.event_type == 'group_dance' %}Dance{% else %}Song{% endif %} Selection:</strong> How appropriate was their choice?</li>
+                                <li><strong>Overall {% if event.event_type == 'group_dance' %}Dance{% else %}Song{% endif %}:</strong> Quality of the performance</li>
+                                <li><strong>Enjoying the Event:</strong> How entertaining was it?</li>
+                            </ul>
+                        </div>
+
+                        {% for team in votable_teams %}
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        Vote for {{ team_choices|get_item:team }}
+                                        {% if team in existing_votes %}
+                                            <span class="badge bg-success">Already Voted</span>
+                                        {% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" class="voting-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="performing_team" value="{{ team }}">
+                                        
+                                        <div class="row">
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label">Group Coordination (1-10)</label>
+                                                <select name="coordination_score" class="form-select" required>
+                                                    <option value="">Select...</option>
+                                                    {% for i in "12345678910"|make_list %}
+                                                        <option value="{{ forloop.counter }}" 
+                                                                {% if team in existing_votes %}{% with existing_votes|get_item:team as vote %}{% if vote.coordination_score == forloop.counter %}selected{% endif %}{% endwith %}{% endif %}>
+                                                            {{ forloop.counter }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label">{% if event.event_type == 'group_dance' %}Dance{% else %}Song{% endif %} Selection (1-10)</label>
+                                                <select name="selection_score" class="form-select" required>
+                                                    <option value="">Select...</option>
+                                                    {% for i in "12345678910"|make_list %}
+                                                        <option value="{{ forloop.counter }}"
+                                                                {% if team in existing_votes %}{% with existing_votes|get_item:team as vote %}{% if vote.selection_score == forloop.counter %}selected{% endif %}{% endwith %}{% endif %}>
+                                                            {{ forloop.counter }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label">Overall {% if event.event_type == 'group_dance' %}Dance{% else %}Song{% endif %} (1-10)</label>
+                                                <select name="overall_score" class="form-select" required>
+                                                    <option value="">Select...</option>
+                                                    {% for i in "12345678910"|make_list %}
+                                                        <option value="{{ forloop.counter }}"
+                                                                {% if team in existing_votes %}{% with existing_votes|get_item:team as vote %}{% if vote.overall_score == forloop.counter %}selected{% endif %}{% endwith %}{% endif %}>
+                                                            {{ forloop.counter }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label">Enjoying the Event (1-10)</label>
+                                                <select name="enjoyment_score" class="form-select" required>
+                                                    <option value="">Select...</option>
+                                                    {% for i in "12345678910"|make_list %}
+                                                        <option value="{{ forloop.counter }}"
+                                                                {% if team in existing_votes %}{% with existing_votes|get_item:team as vote %}{% if vote.enjoyment_score == forloop.counter %}selected{% endif %}{% endwith %}{% endif %}>
+                                                            {{ forloop.counter }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Comments (Optional)</label>
+                                            <textarea name="comments" class="form-control" rows="2" 
+                                                      placeholder="Share your feedback...">{% if team in existing_votes %}{% with existing_votes|get_item:team as vote %}{{ vote.comments }}{% endwith %}{% endif %}</textarea>
+                                        </div>
+                                        
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-vote-yea me-2"></i>
+                                                {% if team in existing_votes %}Update Vote{% else %}Submit Vote{% endif %}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% elif not can_vote and user_team %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <h5><i class="fas fa-info-circle me-2"></i>Voting Information</h5>
+                    {% if not event.voting_enabled %}
+                        <p>Voting is currently closed for this event.</p>
+                    {% elif user_team not in participating_teams %}
+                        <p>Your team is not participating in this event, so you cannot vote.</p>
+                    {% elif not votable_teams %}
+                        <p>No other teams to vote for in this event.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="row">
+        <div class="col-12 text-center">
+            <a href="{% url 'core:events_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Events
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh scores every 30 seconds if voting is enabled
+{% if event.voting_enabled %}
+function refreshScores() {
+    fetch(`{% url 'core:event_voting_api' event.id %}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update last updated time
+                document.getElementById('last-updated').textContent = '(Updated: ' + new Date().toLocaleTimeString() + ')';
+                
+                // You could update the scores here if needed
+                console.log('Scores updated:', data.scores);
+            }
+        })
+        .catch(error => console.error('Error updating scores:', error));
+}
+
+// Refresh scores every 30 seconds
+setInterval(refreshScores, 30000);
+{% endif %}
+
+// Form submission handling
+document.querySelectorAll('.voting-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const selects = form.querySelectorAll('select[required]');
+        let allSelected = true;
+        
+        selects.forEach(select => {
+            if (!select.value) {
+                allSelected = false;
+            }
+        });
+        
+        if (!allSelected) {
+            e.preventDefault();
+            alert('Please select scores for all criteria (1-10 scale)');
+        }
+    });
+});
+</script>
+{% endblock %}

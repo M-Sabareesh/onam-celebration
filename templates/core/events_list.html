@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load core_extras %}
+
+{% block title %}Onam Events - Team Competitions{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="text-center mb-4">
+                <h1 class="display-4 text-primary">🎭 Onam Events</h1>
+                <p class="lead text-muted">Team Competitions & Voting</p>
+                {% if player %}
+                    <p class="text-muted">Player: <strong>{{ player.name }}</strong> | Team: <strong>{{ player.get_team_display }}</strong></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Mahabali Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body text-center py-5">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="display-5 mb-3">🎪 Welcome to Onam Competitions!</h2>
+                            <p class="lead mb-0">Teams compete in traditional events and vote for each other's performances. May the best team win!</p>
+                        </div>
+                        <div class="col-md-4">
+                            <img src="https://images.unsplash.com/photo-1593959142519-b2bc36287d5b?w=400" 
+                                 alt="Onam Celebration" 
+                                 class="img-fluid rounded-circle shadow-lg"
+                                 style="max-width: 200px; height: 200px; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Status Check -->
+    {% if not player %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-warning text-center">
+                    <h4><i class="fas fa-user-plus me-2"></i>Join the Competition!</h4>
+                    <p>Please select your player name to participate in events and voting.</p>
+                    <a href="{% url 'core:select_player' %}" class="btn btn-primary">
+                        <i class="fas fa-user me-2"></i>Select Player
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% elif user_team == 'unassigned' %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <h4><i class="fas fa-users me-2"></i>Team Assignment Needed</h4>
+                    <p>You need to be assigned to a team by an admin to participate in voting.</p>
+                    <p class="mb-0">Contact the event organizers for team assignment.</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Events List -->
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-calendar-star me-2 text-primary"></i>
+                Available Events
+            </h2>
+        </div>
+    </div>
+
+    {% if events_data %}
+        <div class="row">
+            {% for event_data in events_data %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-gradient-{{ event_data.event.event_type|slice:'6:' }}-primary text-white">
+                            <h5 class="card-title mb-0">
+                                {% if event_data.event.event_type == 'group_dance' %}
+                                    <i class="fas fa-music me-2"></i>
+                                {% else %}
+                                    <i class="fas fa-microphone me-2"></i>
+                                {% endif %}
+                                {{ event_data.event.name }}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ event_data.event.description|default:"Team competition event" }}</p>
+                            
+                            <!-- Event Type Badge -->
+                            <div class="mb-3">
+                                <span class="badge bg-info">{{ event_data.event.get_event_type_display }}</span>
+                                {% if event_data.event.voting_enabled %}
+                                    <span class="badge bg-success">Voting Open</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Voting Closed</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Participating Teams -->
+                            <div class="mb-3">
+                                <h6><i class="fas fa-users me-1"></i>Participating Teams:</h6>
+                                {% if event_data.participating_teams %}
+                                    <div class="d-flex flex-wrap gap-1">
+                                        {% for team in event_data.participating_teams %}
+                                            <span class="badge bg-primary">{{ team|capfirst|slice:"5:" }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">No teams registered yet</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- User Status -->
+                            {% if user_team %}
+                                {% if event_data.user_team_participating %}
+                                    <div class="alert alert-success py-2">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        Your team is participating!
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+
+                            <!-- Current Scores (if voting enabled) -->
+                            {% if event_data.event.voting_enabled and event_data.scores %}
+                                <div class="mb-3">
+                                    <h6><i class="fas fa-chart-bar me-1"></i>Current Scores:</h6>
+                                    <div class="row">
+                                        {% for team, scores in event_data.scores.items %}
+                                            <div class="col-6 mb-2">
+                                                <div class="card border-primary">
+                                                    <div class="card-body p-2 text-center">
+                                                        <small class="text-muted">{{ team|capfirst|slice:"5:" }}</small>
+                                                        <br>
+                                                        <strong class="text-primary">{{ scores.total }}/10</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-grid">
+                                <a href="{% url 'core:event_detail' event_data.event.id %}" class="btn btn-primary">
+                                    {% if event_data.can_vote %}
+                                        <i class="fas fa-vote-yea me-2"></i>Vote Now
+                                    {% else %}
+                                        <i class="fas fa-eye me-2"></i>View Details
+                                    {% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Events Available</h4>
+                        <p class="text-muted">Events will be added by the organizers. Check back later!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- How It Works Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h4 class="text-center mb-4">
+                        <i class="fas fa-question-circle me-2 text-info"></i>
+                        How Voting Works
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                            <h6>1. Teams Perform</h6>
+                            <small class="text-muted">Each team performs their dance or song</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                            <h6>2. Rate Performance</h6>
+                            <small class="text-muted">Other teams rate on 4 criteria (1-10 scale)</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <i class="fas fa-chart-line fa-2x text-success mb-2"></i>
+                            <h6>3. Scores Calculated</h6>
+                            <small class="text-muted">Average scores are calculated automatically</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <i class="fas fa-trophy fa-2x text-info mb-2"></i>
+                            <h6>4. Winners Announced</h6>
+                            <small class="text-muted">Highest scoring teams win!</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-dance-primary {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+}
+.bg-gradient-song-primary {
+    background: linear-gradient(135deg, #4834d4, #686de0);
+}
+</style>
+{% endblock %}

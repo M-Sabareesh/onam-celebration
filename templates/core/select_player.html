@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}Join Onam Aghosham - Thantha Vibe{% endblock %}
+
+{% block content %}
+<!-- Mahabali Welcome Section -->
+<section class="onam-header text-center py-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-4 mb-3 mb-lg-0">
+                <!-- Mahabali Image with Fallback -->
+                <div class="mahabali-image-container" style="width: 150px; height: 150px; margin: 0 auto;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Mahabali.jpg/150px-Mahabali.jpg" 
+                         alt="King Mahabali (Maveli)" 
+                         class="img-fluid rounded-circle mahabali-img"
+                         style="width: 150px; height: 150px; object-fit: cover; border: 4px solid var(--onam-gold);"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <!-- Fallback with crown emoji -->
+                    <div class="mahabali-fallback d-none align-items-center justify-content-center" 
+                         style="width: 150px; height: 150px; background: linear-gradient(135deg, var(--onam-gold), var(--kerala-yellow)); border-radius: 50%; border: 4px solid var(--onam-gold);">
+                        <div class="text-center">
+                            <div style="font-size: 4rem;">👑</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <h1 class="display-6 fw-bold mb-2">
+                    <i class="fas fa-crown text-warning me-2"></i>
+                    King Mahabali Welcomes You!
+                </h1>
+                <p class="lead mb-0">Join the Onam Aghosham - Thantha Vibe celebration and explore Kerala's rich traditions</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="form-onam text-center">
+                <h2 class="text-success mb-4">
+                    <i class="fas fa-crown me-2"></i>
+                    Join Onam Aghosham - Thantha Vibe
+                </h2>
+                <p class="lead mb-4">Enter your name to join the treasure hunt adventure in honor of King Maveli!</p>
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <form method="post" class="mb-4">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <div class="form-floating">
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="player_name" 
+                                   name="player_name" 
+                                   placeholder="Enter your name"
+                                   required
+                                   maxlength="100"
+                                   minlength="2"
+                                   autocomplete="name">
+                            <label for="player_name">Your Name</label>
+                        </div>
+                        <small class="form-text text-muted">Enter your full name (2-100 characters)</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <button type="submit" class="btn btn-onam btn-lg w-100">
+                            <i class="fas fa-play me-2"></i>Let's Start Onam!
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="info-card">
+                            <div class="display-6 text-onam-gold mb-2">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h6 class="text-success">Players Online</h6>
+                            <span class="badge bg-success">{{ online_players_count }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="info-card">
+                            <div class="display-6 text-onam-gold mb-2">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <h6 class="text-success">Active Players</h6>
+                            <span class="badge bg-onam-gold text-dark">{{ leaderboard.count }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if leaderboard %}
+                <div class="mt-4">
+                    <h5 class="text-success mb-3">
+                        <i class="fas fa-star me-2"></i>Top Performers
+                    </h5>
+                    <div class="leaderboard-mini">
+                        {% for player in leaderboard %}
+                        <div class="leaderboard-item d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">
+                                <span class="badge bg-onam-gold text-dark me-2">{{ forloop.counter }}</span>
+                                {{ player.name }}
+                                {% if player.is_online %}
+                                    <span class="badge bg-success ms-1">🟢</span>
+                                {% endif %}
+                            </span>
+                            <span class="badge bg-primary">{{ player.score }} pts</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="mt-4">
+                    <a href="{% url 'core:home' %}" class="btn btn-outline-success">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-onam {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 3px solid var(--onam-gold);
+}
+
+.info-card {
+    background: rgba(248, 249, 250, 0.8);
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(255, 215, 0, 0.2);
+}
+
+.leaderboard-mini {
+    background: rgba(248, 249, 250, 0.8);
+    border-radius: 10px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.leaderboard-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-item:last-child {
+    border-bottom: none;
+}
+
+.form-floating > .form-control {
+    border: 2px solid var(--onam-gold);
+    border-radius: 10px;
+}
+
+.form-floating > .form-control:focus {
+    border-color: var(--onam-green);
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.btn-onam {
+    background: linear-gradient(135deg, var(--onam-green), #218838);
+    border: none;
+    border-radius: 15px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-onam:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+}
+</style>
+
+<script>
+// Auto-focus on name input
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('player_name').focus();
+});
+
+// Real-time name validation
+document.getElementById('player_name').addEventListener('input', function() {
+    const name = this.value.trim();
+    const submitBtn = document.querySelector('button[type="submit"]');
+    
+    if (name.length >= 2) {
+        submitBtn.disabled = false;
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+    } else {
+        submitBtn.disabled = true;
+        this.classList.remove('is-valid');
+        if (name.length > 0) {
+            this.classList.add('is-invalid');
+        }
+    }
+});
+</script>
+{% endblock %}

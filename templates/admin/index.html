@@ -1,0 +1,190 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:"Django administration" }}</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block content %}
+{% load i18n %}
+
+<!-- Enhanced Admin Dashboard for Onam Aghosham - Thantha Vibe -->
+<div class="dashboard onam-admin-dashboard">
+    <div class="module dashboard-stats">
+        <h2>
+            <i class="fas fa-crown text-warning me-2"></i>
+            Onam Aghosham - Thantha Vibe Dashboard
+        </h2>
+        
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Players</h3>
+                    <p class="card-number">{{ total_players|default:"--" }}</p>
+                    <small>Active participants</small>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Questions</h3>
+                    <p class="card-number">{{ total_questions|default:"--" }}</p>
+                    <small>Active treasure hunt questions</small>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Pending Answers</h3>
+                    <p class="card-number text-warning">{{ pending_answers|default:"0" }}</p>
+                    <small>Awaiting approval</small>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-circle text-success"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Online Players</h3>
+                    <p class="card-number text-success">{{ online_players|default:"0" }}</p>
+                    <small>Currently active</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-actions">
+            <h3>Quick Actions</h3>
+            <div class="action-buttons">
+                <a href="{% url 'admin:core_player_changelist' %}" class="button">
+                    <i class="fas fa-users me-1"></i>Manage Players
+                </a>
+                <a href="{% url 'admin:core_treasurehuntquestion_changelist' %}" class="button">
+                    <i class="fas fa-question me-1"></i>Manage Questions
+                </a>
+                <a href="{% url 'admin:core_playeranswer_changelist' %}" class="button">
+                    <i class="fas fa-check me-1"></i>Review Answers
+                </a>
+                <a href="/custom-admin/dashboard/" class="button default">
+                    <i class="fas fa-tachometer-alt me-1"></i>Enhanced Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.onam-admin-dashboard {
+    padding: 20px;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.dashboard-card {
+    background: white;
+    border: 2px solid #FFD700;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    color: #228B22;
+    margin-right: 15px;
+}
+
+.card-content h3 {
+    margin: 0 0 5px 0;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.card-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0;
+    color: #228B22;
+}
+
+.card-number.text-warning {
+    color: #FFA500 !important;
+}
+
+.card-number.text-success {
+    color: #228B22 !important;
+}
+
+.card-content small {
+    color: #666;
+}
+
+.dashboard-actions {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.action-buttons .button {
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    color: #333;
+    padding: 12px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.action-buttons .button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+    color: #333;
+}
+
+.action-buttons .button.default {
+    background: linear-gradient(45deg, #228B22, #32CD32);
+    color: white;
+}
+
+.action-buttons .button.default:hover {
+    color: white;
+}
+</style>
+{% endblock %}

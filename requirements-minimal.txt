@@ -1,0 +1,60 @@
+# Minimal requirements for quick setup
+# Use this if you encounter dependency conflicts with requirements.txt
+
+# Core Django
+Django>=4.2,<5.0
+djangorestframework
+django-cors-headers
+django-environ
+
+# Database
+psycopg2-binary
+dj-database-url
+
+# Authentication & Security
+django-allauth
+django-otp
+django-phonenumber-field
+phonenumbers
+django-ratelimit
+
+# SMS Services
+twilio
+messagebird
+
+# Static files & Media
+whitenoise
+Pillow
+
+# API & Serialization
+djangorestframework-simplejwt
+django-filter
+drf-spectacular
+
+# Development & Testing (optional for quick start)
+django-debug-toolbar
+factory-boy
+pytest
+pytest-django
+pytest-cov
+
+# Production Server
+gunicorn
+celery
+redis
+
+# Code Quality (optional for quick start)
+flake8
+black
+isort
+
+# Monitoring & Logging
+sentry-sdk
+django-extensions
+
+# Bootstrap & Frontend
+django-bootstrap5>=23.3
+
+# Time & Localization
+pytz
+django-timezone-field

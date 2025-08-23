@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}About Onam - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .onam-section {
+        background: linear-gradient(135deg, var(--onam-green), var(--kerala-yellow));
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 15px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .onam-section::before {
+        content: '👑';
+        position: absolute;
+        font-size: 12rem;
+        opacity: 0.1;
+        top: 50%;
+        right: 10%;
+        transform: translateY(-50%);
+    }
+    
+    .tradition-card {
+        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border: 2px solid var(--onam-gold);
+        transition: transform 0.3s ease;
+    }
+    
+    .tradition-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(255, 215, 0, 0.2);
+    }
+    
+    .tradition-card h4 {
+        color: var(--onam-red);
+        margin-bottom: 1rem;
+        font-weight: bold;
+    }
+    
+    .maveli-story {
+        background: linear-gradient(135deg, var(--maveli-purple), var(--onam-red));
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin: 2rem 0;
+        position: relative;
+    }
+    
+    .maveli-story::before {
+        content: '🌺';
+        position: absolute;
+        font-size: 4rem;
+        opacity: 0.2;
+        top: 1rem;
+        right: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Hero Section -->
+    <div class="onam-section text-center">
+        <div class="container">
+            <h1 class="display-4 mb-4">
+                <i class="fas fa-crown text-warning me-3"></i>
+                About Onam Aghosham - Thantha Vibe
+                <i class="fas fa-crown text-warning ms-3"></i>
+            </h1>
+            <p class="lead">The Grand Festival Celebrating King Mahabali's Return</p>
+        </div>
+    </div>
+
+    <!-- Mahabali Story Section -->
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="text-center">
+                <!-- Beautiful Kerala King Design -->
+                <div class="mahabali-image-container" style="width: 350px; height: 350px; margin: 0 auto;">
+                    <div class="kerala-king-design d-flex align-items-center justify-content-center" 
+                         style="width: 350px; height: 350px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 30%, #FF8C00 70%, #DAA520 100%); border-radius: 50%; border: 6px solid var(--onam-red); box-shadow: 0 12px 35px rgba(255, 215, 0, 0.5); position: relative;">
+                        
+                        <!-- Decorative border -->
+                        <div style="position: absolute; top: 8px; left: 8px; right: 8px; bottom: 8px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%;"></div>
+                        
+                        <div class="text-center">
+                            <!-- Crown -->
+                            <div style="font-size: 8rem; filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.4)); margin-bottom: -15px;">👑</div>
+                            
+                            <!-- King's Face/Symbol -->
+                            <div style="font-size: 3rem; margin: 8px 0;">🤴🏽</div>
+                            
+                            <!-- Title -->
+                            <h4 class="text-dark fw-bold" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.4); margin-top: 10px;">MAHABALI</h4>
+                            <h6 class="text-dark" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">Maveli</h6>
+                            
+                            <!-- Decorative elements -->
+                            <div class="mt-2" style="font-size: 1.2rem;">
+                                <span>🌺</span>
+                                <span style="margin: 0 8px;">🕉️</span>
+                                <span>🌺</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <h2 class="display-5 fw-bold text-success mb-3">
+                <i class="fas fa-crown text-warning me-2"></i>
+                The Legend of King Mahabali (Maveli)
+            </h2>
+            <p class="lead mb-4">
+                Onam is the most important and popular festival in Kerala, celebrating the homecoming of 
+                the legendary King Mahabali (Maveli), whose reign was considered the golden age of Kerala.
+            </p>
+            
+            <div class="maveli-story">
+                <h4><i class="fas fa-scroll text-warning me-2"></i>The Golden Age</h4>
+                <p class="mb-3">
+                    According to Hindu mythology, King Mahabali was a just and benevolent ruler under whose 
+                    reign Kerala experienced unprecedented prosperity, peace, and happiness. During his rule:
+                </p>
+                <ul class="mb-0">
+                    <li>There was no crime, poverty, or inequality</li>
+                    <li>People lived in harmony and prosperity</li>
+                    <li>Truth and justice prevailed throughout the land</li>
+                    <li>Everyone was equal regardless of caste or creed</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Festival Details -->
+    <div class="row">
+        <div class="col-md-8">
+            <h3 class="text-success mb-3">
+                <i class="fas fa-calendar-alt text-warning me-2"></i>
+                When is Onam Celebrated?
+            </h3>
+            <p class="mb-4">
+                Onam falls during the Malayalam month of Chingam (August-September) and is celebrated 
+                for 10 days. The most important day is <strong>Thiruvonam</strong>, which marks the 
+                homecoming of King Mahabali to visit his beloved people.
+            </p>
+            
+            <h3 class="text-success mb-3">
+                <i class="fas fa-seedling text-warning me-2"></i>
+                Harvest Festival
+            </h3>
+            <p>
+                Onam is also a harvest festival that celebrates the rice harvest and the bounty of nature 
+                in "God's Own Country" - Kerala. It brings together people of all communities to celebrate 
+                the rich cultural heritage and traditions of Kerala.
+            </p>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="tradition-card text-center">
+                <h4>
+                    <i class="fas fa-crown text-warning me-2"></i>
+                    King Mahabali (Maveli)
+                </h4>
+                <p>The beloved ruler who returns to Kerala during Onam to bless his people with prosperity and happiness.</p>
+            </div>
+            
+            <div class="tradition-card text-center">
+                <h4>
+                    <i class="fas fa-seedling text-warning me-2"></i>
+                    Harvest Celebration
+                </h4>
+                <p>Celebrates the rice harvest and the bounty of nature in God's Own Country - Kerala.</p>
+            </div>
+            
+            <div class="tradition-card text-center">
+                <h4>
+                    <i class="fas fa-users text-warning me-2"></i>
+                    Unity & Harmony
+                </h4>
+                <p>Brings together people of all communities to celebrate Kerala's rich cultural heritage.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onam Traditions -->
+    <div class="row mt-5">
+        <div class="col-12 mb-4">
+            <h2 class="text-center display-5 fw-bold text-success">
+                <i class="fas fa-star text-warning me-3"></i>
+                Onam Traditions & Celebrations
+                <i class="fas fa-star text-warning ms-3"></i>
+            </h2>
+            <p class="text-center lead">Discover the beautiful traditions that make Onam special</p>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="tradition-card">
+                <h4>
+                    <i class="fas fa-flower text-warning me-2"></i>
+                    Pookalam (Flower Carpet)
+                </h4>
+                <p>
+                    Beautiful flower carpets created in front of homes to welcome King Mahabali. 
+                    These intricate designs use different colored flowers and are a symbol of Onam's 
+                    beauty and the artistic heritage of Kerala.
+                </p>
+            </div>
+            
+            <div class="tradition-card">
+                <h4>
+                    <i class="fas fa-utensils text-warning me-2"></i>
+                    Onam Sadhya (Feast)
+                </h4>
+                <p>
+                    The traditional Onam feast served on banana leaves, featuring rice and 
+                    multiple vegetarian dishes, pickles, and payasam (sweet pudding). It represents 
+                    the abundance during King Mahabali's reign.
+                </p>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="tradition-card">
+                <h4>
+                    <i class="fas fa-mask text-warning me-2"></i>
+                    Pulikali (Tiger Dance)
+                </h4>
+                <p>
+                    The colorful tiger dance where performers paint themselves as tigers and leopards, 
+                    dancing to the rhythm of traditional percussion instruments like chenda and thakil.
+                </p>
+            </div>
+            
+            <div class="tradition-card">
+                <h4>
+                    <i class="fas fa-theater-masks text-warning me-2"></i>
+                    Kathakali & Cultural Arts
+                </h4>
+                <p>
+                    Classical dance drama of Kerala featuring elaborate costumes, makeup, 
+                    and storytelling through dance and expressions, celebrating the rich cultural heritage.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onam Wishes Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="onam-section text-center">
+                <h3>
+                    <i class="fas fa-heart text-warning me-2"></i>
+                    Onam Aghosham - Thantha Vibe Wishes
+                    <i class="fas fa-heart text-warning ms-2"></i>
+                </h3>
+                <p class="lead mb-3">May King Mahabali's blessings bring joy, prosperity, and happiness to all!</p>
+                <div class="mb-3">
+                    <span class="badge bg-warning text-dark fs-5 px-4 py-2 me-3">ഓണാശംസകൾ!</span>
+                    <span class="badge bg-light text-dark fs-5 px-4 py-2">Happy Onam!</span>
+                </div>
+                <p><strong>Welcome home, King Mahabali (Maveli)!</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="text-center mt-5 mb-5">
+        <a href="{% url 'core:home' %}" class="btn btn-onam btn-lg me-3">
+            <i class="fas fa-home me-2"></i>Back to Home
+        </a>
+        <a href="{% url 'core:select_player' %}" class="btn btn-outline-success btn-lg">
+            <i class="fas fa-play me-2"></i>Let's Start Onam
+        </a>
+    </div>
+</div>
+{% endblock %}

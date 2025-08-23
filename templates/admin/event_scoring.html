@@ -1,0 +1,259 @@
+{% extends "admin/base_site.html" %}
+{% load admin_urls static %}
+
+{% block title %}Event Scoring - {{ event.name }} - {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:manage_events' %}">Manage Events</a>
+    &rsaquo; Event Scoring - {{ event.name }}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Event Scoring - {{ event.name }}</h1>
+
+<div class="module">
+    <h2>Event Information</h2>
+    <div class="event-details">
+        <p><strong>Event:</strong> {{ event.name }} ({{ event.get_event_type_display }})</p>
+        <p><strong>Description:</strong> {{ event.description|default:"No description" }}</p>
+        <p><strong>Status:</strong> 
+            <span class="status-{{ event.is_active|yesno:'active,inactive' }}">
+                {{ event.is_active|yesno:"Active,Inactive" }}
+            </span>
+        </p>
+        <p><strong>Voting Enabled:</strong> 
+            <span class="status-{{ event.voting_enabled|yesno:'enabled,disabled' }}">
+                {{ event.voting_enabled|yesno:"Yes,No" }}
+            </span>
+        </p>
+    </div>
+</div>
+
+<div class="module">
+    <h2>Award Points to Teams</h2>
+    
+    <div class="award-points-form">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="field-box">
+                    <label for="team">Team:</label>
+                    <select name="team" id="team" required>
+                        <option value="">Select Team</option>
+                        {% for team_code, team_name in all_teams %}
+                        <option value="{{ team_code }}">{{ team_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="field-box">
+                    <label for="points">Points:</label>
+                    <input type="number" name="points" id="points" step="0.01" min="0" max="100" required>
+                    <p class="help">Enter points to award (can be decimal, e.g., 8.5)</p>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="field-box">
+                    <label for="notes">Notes (Optional):</label>
+                    <textarea name="notes" id="notes" rows="3" placeholder="Optional notes about the scoring..."></textarea>
+                </div>
+            </div>
+            
+            <div class="submit-row">
+                <input type="submit" value="Award Points" class="default">
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="module">
+    <h2>Current Team Scores</h2>
+    
+    {% if team_scores %}
+    <div class="results">
+        <table>
+            <thead>
+                <tr>
+                    <th>Team</th>
+                    <th>Points Awarded</th>
+                    <th>Notes</th>
+                    <th>Awarded By</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for team_code, score in team_scores.items %}
+                <tr>
+                    <td><strong>{{ team_choices|get_item:team_code }}</strong></td>
+                    {% if score %}
+                    <td>
+                        <span class="points-awarded">{{ score.points }} points</span>
+                    </td>
+                    <td>{{ score.notes|default:"No notes" }}</td>
+                    <td>{{ score.awarded_by }}</td>
+                    <td>{{ score.awarded_at|date:"M j, Y g:i A" }}</td>
+                    <td>
+                        <a href="{% url 'admin:core_eventscore_change' score.id %}" class="button">Edit</a>
+                    </td>
+                    {% else %}
+                    <td><em>No score awarded</em></td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="help">No teams are participating in this event yet.</p>
+    {% endif %}
+</div>
+
+<div class="module">
+    <h2>Voting Results (if enabled)</h2>
+    
+    {% if event.voting_enabled %}
+        <p class="help">Voting is enabled for this event. Team votes will be used as scores if no admin scores are awarded.</p>
+        
+        {% if event.average_scores %}
+        <div class="voting-results">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Team</th>
+                        <th>Average Vote Score</th>
+                        <th>Number of Votes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for team_code, scores in event.average_scores.items %}
+                    <tr>
+                        <td><strong>{{ team_choices|get_item:team_code }}</strong></td>
+                        <td>{{ scores.voting_score|floatformat:2 }}/10</td>
+                        <td>{{ scores.vote_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="help">No votes have been cast yet.</p>
+        {% endif %}
+    {% else %}
+    <p class="help">Voting is disabled for this event. Only admin-awarded scores will be used.</p>
+    {% endif %}
+</div>
+
+<div class="submit-row">
+    <a href="{% url 'admin:manage_events' %}" class="button">Back to Events</a>
+    <a href="{% url 'core:leaderboard' %}" class="button" target="_blank">View Leaderboard</a>
+</div>
+
+<style>
+.event-details {
+    background: #f8f8f8;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+.award-points-form {
+    background: #e8f5e8;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.form-row {
+    margin-bottom: 15px;
+}
+
+.field-box {
+    margin-bottom: 10px;
+}
+
+.field-box label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.field-box input, .field-box select, .field-box textarea {
+    width: 100%;
+    max-width: 300px;
+}
+
+.points-awarded {
+    background: #4CAF50;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.voting-results {
+    margin: 10px 0;
+}
+
+.voting-results table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.voting-results th, .voting-results td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.voting-results th {
+    background: #f2f2f2;
+}
+
+.status-active, .status-enabled {
+    color: green;
+    font-weight: bold;
+}
+
+.status-inactive, .status-disabled {
+    color: #666;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+table th, table td {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+table th {
+    background: #f2f2f2;
+    font-weight: bold;
+}
+
+table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+</style>
+
+<script>
+// Auto-focus on team select when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('team').focus();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load core_extras %}
+
+{% block title %}Leaderboard - Onam Celebration{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1 class="display-4 text-success mb-3">
+            <i class="fas fa-trophy me-2"></i>
+            Onam Aghosham Leaderboard
+        </h1>
+        <p class="lead">See how teams and players are performing in treasure hunt and events!</p>
+    </div>
+
+    <!-- Team Standings -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Team Standings (Treasure Hunt + Events)
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for team_name, team_data in team_standings %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-{% if forloop.counter == 1 %}warning{% elif forloop.counter == 2 %}secondary{% elif forloop.counter == 3 %}dark{% else %}light{% endif %}">
+                                <div class="card-header bg-{% if forloop.counter == 1 %}warning{% elif forloop.counter == 2 %}secondary{% elif forloop.counter == 3 %}dark{% else %}light{% endif %} text-{% if forloop.counter <= 3 %}white{% else %}dark{% endif %}">
+                                    <h5 class="mb-0">
+                                        {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}.{% endif %}
+                                        {{ team_name }}
+                                        <span class="float-end">{{ team_data.total_score }} pts</span>
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-2">Team Members:</h6>
+                                            {% for player in team_data.players %}
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span>
+                                                    <i class="fas fa-user text-muted me-2"></i>
+                                                    {{ player.get_name_display }}
+                                                </span>
+                                                <span class="badge bg-{% if player.score > 0 %}success{% else %}secondary{% endif %}">
+                                                    {{ player.score }} pts
+                                                </span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-2">Score Breakdown:</h6>
+                                            <div class="mb-1">
+                                                <small class="text-muted">Treasure Hunt:</small>
+                                                <span class="badge bg-info float-end">{{ team_data.treasure_hunt_score }} pts</span>
+                                            </div>
+                                            {% if team_data.event_scores %}
+                                                {% for event_name, event_score in team_data.event_scores.items %}
+                                                <div class="mb-1">
+                                                    <small class="text-muted">{{ event_name }}:</small>
+                                                    <span class="badge bg-success float-end">{{ event_score|floatformat:1 }} pts</span>
+                                                </div>
+                                                {% endfor %}
+                                            {% endif %}
+                                            <hr class="my-2">
+                                            <div class="fw-bold">
+                                                <small class="text-dark">Total:</small>
+                                                <span class="badge bg-primary float-end">{{ team_data.total_score|floatformat:1 }} pts</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Events Results Section -->
+    {% if events %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">
+                        <i class="fas fa-star me-2"></i>
+                        Events Results
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% for event_detail in events %}
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-music me-2"></i>{{ event_detail.event.name }}
+                        </h5>
+                        <div class="row">
+                            {% for team_code, team_score in event_detail.scores.items %}
+                            {% if team_code != 'unassigned' %}
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="card border-primary">
+                                    <div class="card-body text-center py-2">
+                                        <h6 class="card-title mb-1">{{ team_choices|get_item:team_code }}</h6>
+                                        <p class="card-text mb-1">
+                                            <span class="badge bg-primary">{{ team_score.total|floatformat:1 }} pts</span>
+                                        </p>
+                                        <small class="text-muted">{{ team_score.vote_count }} vote{{ team_score.vote_count|pluralize }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if event_detail.total_votes %}
+                        <p class="text-muted mb-0"><small>Total votes received: {{ event_detail.total_votes }}</small></p>
+                        {% endif %}
+                    </div>
+                    {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Individual Player Rankings -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-friends me-2"></i>
+                        Individual Player Rankings
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Player</th>
+                                    <th>Team</th>
+                                    <th>Score</th>
+                                    <th>Level</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for player in players %}
+                                <tr>
+                                    <td>
+                                        {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ player.get_name_display }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ player.team }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-success">{{ player.score }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">Level {{ player.current_level }}</span>
+                                    </td>
+                                    <td>
+                                        {% if player.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        No players have started the game yet. Be the first to join!
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h4 class="text-success mb-3">Join the Competition!</h4>
+                    <p class="lead mb-3">Ready to climb the leaderboard in treasure hunt and vote in events?</p>
+                    <a href="{% url 'core:select_player' %}" class="btn btn-onam btn-lg me-3">
+                        <i class="fas fa-play me-2"></i>Start Treasure Hunt
+                    </a>
+                    <a href="{% url 'core:events_list' %}" class="btn btn-warning btn-lg me-3">
+                        <i class="fas fa-star me-2"></i>View Events
+                    </a>
+                    <a href="{% url 'core:home' %}" class="btn btn-outline-success btn-lg">
+                        <i class="fas fa-home me-2"></i>Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.table th {
+    border-top: none;
+    background-color: #f8f9fa;
+}
+
+.badge {
+    font-size: 0.8em;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} - Onam Aghosham - Thantha Vibe{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="onam-header text-center">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-crown text-warning me-3"></i>
+                    Onam Aghosham - Thantha Vibe
+                    <i class="fas fa-crown text-warning ms-3"></i>
+                </h1>
+                <p class="lead mb-4">
+                    Experience the magic of Kerala's most beloved festival through our interactive treasure hunt game. 
+                    Discover traditions, solve clues, and celebrate the legend of King Mahabali (Maveli)!
+                </p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{% url 'core:select_player' %}" class="btn btn-onam btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Join Celebration
+                    </a>
+                    <a href="{% url 'core:about' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-info-circle me-2"></i>About Onam
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mahabali/Maveli Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <div class="text-center">
+                    <!-- Beautiful Kerala King Design -->
+                    <div class="mahabali-image-container" style="width: 400px; height: 400px; margin: 0 auto;">
+                        <div class="kerala-king-design d-flex align-items-center justify-content-center" 
+                             style="width: 400px; height: 400px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 30%, #FF8C00 70%, #DAA520 100%); border-radius: 50%; border: 8px solid var(--onam-red); box-shadow: 0 15px 40px rgba(255, 215, 0, 0.5); position: relative;">
+                            
+                            <!-- Decorative border -->
+                            <div style="position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%;"></div>
+                            
+                            <div class="text-center">
+                                <!-- Crown -->
+                                <div style="font-size: 10rem; filter: drop-shadow(4px 4px 8px rgba(0,0,0,0.4)); margin-bottom: -20px;">👑</div>
+                                
+                                <!-- King's Face/Symbol -->
+                                <div style="font-size: 4rem; margin: 10px 0;">🤴🏽</div>
+                                
+                                <!-- Title -->
+                                <h3 class="text-dark fw-bold" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.4); margin-top: 15px;">MAHABALI</h3>
+                                <h5 class="text-dark" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">King of Kerala</h5>
+                                
+                                <!-- Decorative elements -->
+                                <div class="mt-3" style="font-size: 1.5rem;">
+                                    <span>🌺</span>
+                                    <span style="margin: 0 10px;">🕉️</span>
+                                    <span>🌺</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <h2 class="display-5 fw-bold text-success mb-3">
+                    <i class="fas fa-crown text-warning me-2"></i>
+                    Welcome King Mahabali (Maveli)
+                </h2>
+                <p class="lead mb-4">
+                    Onam celebrates the homecoming of the legendary King Mahabali, whose reign was considered the golden age of Kerala. 
+                    During his rule, people lived in peace, prosperity, and happiness.
+                </p>
+                <div class="mb-4">
+                    <h5 class="text-success mb-3">Legend of Maveli:</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-star text-warning me-2"></i>Benevolent and just ruler</li>
+                        <li class="mb-2"><i class="fas fa-star text-warning me-2"></i>Era of prosperity and equality</li>
+                        <li class="mb-2"><i class="fas fa-star text-warning me-2"></i>Annual return during Onam festival</li>
+                        <li class="mb-2"><i class="fas fa-star text-warning me-2"></i>Symbol of Kerala's cultural heritage</li>
+                    </ul>
+                </div>
+                <a href="{% url 'core:select_player' %}" class="btn btn-onam btn-lg">
+                    <i class="fas fa-play me-2"></i>Join the Celebration
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Onam Traditions Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold text-success mb-3">Onam Celebrations</h2>
+            <p class="lead">Discover the beautiful traditions that make Onam special</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for celebration in celebrations %}
+            <div class="col-lg-3 col-md-6">
+                <div class="card pookalam-card h-100 text-center p-4">
+                    <div class="celebration-icon">
+                        {% if celebration.name == 'Pookalam' %}
+                            <i class="fas fa-flower"></i>
+                        {% elif celebration.name == 'Sadhya' %}
+                            <i class="fas fa-utensils"></i>
+                        {% elif celebration.name == 'Pulikali' %}
+                            <i class="fas fa-mask"></i>
+                        {% else %}
+                            <i class="fas fa-theater-masks"></i>
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title fw-bold text-success">{{ celebration.name }}</h5>
+                    <p class="card-text">{{ celebration.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold text-success mb-3">How the Treasure Hunt Works</h2>
+            <p class="lead">Join our SMS-based adventure and explore Onam traditions</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 text-center">
+                <div class="card border-0 h-100">
+                    <div class="card-body">
+                        <div class="display-4 text-warning mb-3">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h5 class="fw-bold">1. Sign Up with Your Phone</h5>
+                        <p>Register with your Swedish phone number (+46) and verify via SMS OTP</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 text-center">
+                <div class="card border-0 h-100">
+                    <div class="card-body">
+                        <div class="display-4 text-success mb-3">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h5 class="fw-bold">2. Receive Clues via SMS</h5>
+                        <p>Get exciting clues about Onam traditions sent directly to your phone</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 text-center">
+                <div class="card border-0 h-100">
+                    <div class="card-body">
+                        <div class="display-4 text-danger mb-3">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <h5 class="fw-bold">3. Solve & Win Prizes</h5>
+                        <p>Submit answers, progress through levels, and compete on the leaderboard</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Onam Story Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="display-5 fw-bold text-success mb-4">The Legend of King Mahabali</h2>
+                <p class="lead mb-4">
+                    Long ago, Kerala was ruled by a great Asura king named Mahabali. His reign was marked by 
+                    prosperity, justice, and happiness. People lived without fear, crime, or inequality.
+                </p>
+                <p class="mb-4">
+                    The gods became envious of Mahabali's popularity and power. Lord Vishnu, in his Vamana avatar, 
+                    visited the king and asked for three paces of land. When granted, Vamana grew to cosmic size 
+                    and covered the earth and sky in two steps, sending Mahabali to the netherworld.
+                </p>
+                <p class="mb-4">
+                    Touched by Mahabali's devotion and sacrifice, Vishnu granted him permission to visit his 
+                    beloved kingdom once a year. Onam celebrates this annual homecoming of the beloved king.
+                </p>
+                <a href="{% url 'core:about' %}" class="btn btn-onam">
+                    <i class="fas fa-book me-2"></i>Learn More About Onam
+                </a>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <div class="card border-0 shadow-lg">
+                        <div class="card-body p-5">
+                            <div class="display-1 text-warning mb-3">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <h4 class="text-success fw-bold">King Mahabali</h4>
+                            <p class="text-muted">The Beloved Ruler of Kerala</p>
+                            <div class="mt-4">
+                                <span class="badge bg-success fs-6 me-2">Justice</span>
+                                <span class="badge bg-warning fs-6 me-2">Prosperity</span>
+                                <span class="badge bg-danger fs-6">Generosity</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5 bg-success text-white">
+    <div class="container text-center">
+        <h2 class="display-5 fw-bold mb-3">Ready to Start Your Onam Adventure?</h2>
+        <p class="lead mb-4">
+            Join thousands of players in celebrating Kerala's rich cultural heritage through our interactive treasure hunt!
+        </p>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'core:select_player' %}" class="btn btn-onam btn-lg me-3">
+                <i class="fas fa-rocket me-2"></i>Start Playing Now
+            </a>
+            <a href="{% url 'core:about' %}" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-info-circle me-2"></i>Learn More
+            </a>
+        {% else %}
+            <a href="{% url 'core:game_dashboard' %}" class="btn btn-onam btn-lg me-3">
+                <i class="fas fa-play me-2"></i>Continue Game
+            </a>
+            <a href="{% url 'core:leaderboard' %}" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-chart-line me-2"></i>View Rankings
+            </a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Features Grid -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold text-success">Why Play Our Treasure Hunt?</h2>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="display-4 text-primary mb-3">
+                        <i class="fas fa-sms"></i>
+                    </div>
+                    <h5 class="fw-bold">SMS Integration</h5>
+                    <p>Receive clues directly on your phone via SMS for an immersive experience</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="display-4 text-info mb-3">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h5 class="fw-bold">Learn Culture</h5>
+                    <p>Discover Kerala's traditions, food, dance, and customs through engaging gameplay</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="display-4 text-warning mb-3">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h5 class="fw-bold">Community</h5>
+                    <p>Compete with friends and family on the leaderboard and share achievements</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Onam Aghosham - Thantha Vibe{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --onam-gold: #FFD700;
+            --onam-green: #228B22;
+            --onam-red: #DC143C;
+            --kerala-yellow: #FFA500;
+            --maveli-purple: #8B4B8B;
+        }
+        
+        .onam-header {
+            background: linear-gradient(135deg, var(--onam-green) 0%, var(--kerala-yellow) 100%);
+            color: white;
+            padding: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .onam-header::before {
+            content: '👑';
+            position: absolute;
+            font-size: 8rem;
+            opacity: 0.1;
+            top: 50%;
+            left: 10%;
+            transform: translateY(-50%);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .onam-header::after {
+            content: '🌺';
+            position: absolute;
+            font-size: 6rem;
+            opacity: 0.1;
+            top: 20%;
+            right: 15%;
+            animation: float 4s ease-in-out infinite reverse;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(-50%) translateX(0px); }
+            50% { transform: translateY(-50%) translateX(10px); }
+        }
+        
+        .pookalam-card {
+            border: 3px solid var(--onam-gold);
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+            background: linear-gradient(145deg, #ffffff 0%, #fff9e6 100%);
+        }
+        
+        .pookalam-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
+            border-color: var(--onam-red);
+        }
+        
+        .celebration-icon {
+            font-size: 3rem;
+            color: var(--onam-red);
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .pookalam-card:hover .celebration-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .btn-onam {
+            background: linear-gradient(45deg, var(--onam-gold), var(--kerala-yellow));
+            border: none;
+            color: #333;
+            font-weight: bold;
+            padding: 12px 30px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-onam::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-onam:hover::before {
+            left: 100%;
+        }
+        
+        .btn-onam:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+            color: #333;
+        }
+        
+        .navbar-onam {
+            background: var(--onam-green) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        .footer-onam {
+            background: linear-gradient(135deg, var(--onam-green) 0%, var(--maveli-purple) 100%);
+            color: white;
+            position: relative;
+        }
+        
+        .footer-onam::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><polygon fill="%23FFD700" fill-opacity="0.1" points="0,0 100,0 90,20 10,20"/></svg>');
+            background-size: 100px 20px;
+            background-repeat: repeat-x;
+            opacity: 0.3;
+        }
+        
+        .maveli-badge {
+            background: var(--maveli-purple);
+            color: white;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 5px var(--onam-gold); }
+            to { box-shadow: 0 0 20px var(--onam-gold), 0 0 30px var(--onam-gold); }
+        }
+        
+        /* Mahabali Image Styling */
+        .mahabali-image-container {
+            position: relative;
+        }
+        
+        .mahabali-fallback {
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .mahabali-fallback:hover {
+            transform: scale(1.05);
+        }
+        
+        .mahabali-img {
+            transition: transform 0.3s ease;
+        }
+        
+        .mahabali-img:hover {
+            transform: scale(1.05);
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-onam">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">
+                <i class="fas fa-crown text-warning me-2"></i>
+                Onam Aghosham - Thantha Vibe
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:about' %}">About Onam</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:treasure_hunt' %}">Treasure Hunt</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:events_list' %}">
+                            <i class="fas fa-calendar-star me-1"></i>Events
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:select_player' %}">
+                            <i class="fas fa-user me-1"></i>Select Player
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:leaderboard' %}">
+                            <i class="fas fa-trophy me-1"></i>Leaderboard
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% if messages %}
+            <div class="container mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-onam mt-5 py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <div class="text-center">
+                        <!-- Beautiful Compact Kerala King Design -->
+                        <div class="mahabali-image-container" style="width: 120px; height: 120px; margin: 0 auto;">
+                            <div class="kerala-king-design d-flex align-items-center justify-content-center mb-3" 
+                                 style="width: 120px; height: 120px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%); border-radius: 50%; border: 3px solid var(--onam-red); box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);">
+                                <div class="text-center">
+                                    <div style="font-size: 3rem; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));">👑</div>
+                                    <div style="font-size: 1.5rem; margin-top: -5px;">🤴🏽</div>
+                                </div>
+                            </div>
+                        </div>
+                        <h5><i class="fas fa-crown text-warning me-2"></i>Onam Aghosham - Thantha Vibe</h5>
+                        <p class="mb-3">Celebrating the return of King Mahabali (Maveli) through an interactive treasure hunt experience.</p>
+                        <div class="text-center">
+                            <span class="badge bg-warning text-dark fs-6 px-3 py-2">ഓണാശംസകൾ!</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                    <h6><i class="fas fa-link text-warning me-2"></i>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'core:home' %}" class="text-light text-decoration-none"><i class="fas fa-home me-2"></i>Home</a></li>
+                        <li class="mb-2"><a href="{% url 'core:about' %}" class="text-light text-decoration-none"><i class="fas fa-info-circle me-2"></i>About Onam</a></li>
+                        <li class="mb-2"><a href="{% url 'core:treasure_hunt' %}" class="text-light text-decoration-none"><i class="fas fa-search me-2"></i>Treasure Hunt</a></li>
+                        <li class="mb-2"><a href="{% url 'core:leaderboard' %}" class="text-light text-decoration-none"><i class="fas fa-trophy me-2"></i>Leaderboard</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                    <h6><i class="fas fa-crown text-warning me-2"></i>Kerala Traditions</h6>
+                    <ul class="list-unstyled text-light">
+                        <li class="mb-2"><i class="fas fa-flower text-warning me-2"></i>Pookalam</li>
+                        <li class="mb-2"><i class="fas fa-utensils text-warning me-2"></i>Onam Sadhya</li>
+                        <li class="mb-2"><i class="fas fa-mask text-warning me-2"></i>Pulikali</li>
+                        <li class="mb-2"><i class="fas fa-theater-masks text-warning me-2"></i>Thiruvathira</li>
+                    </ul>
+                </div>
+                <div class="col-lg-2">
+                    <h6><i class="fas fa-share-alt text-warning me-2"></i>Connect</h6>
+                    <div class="d-flex gap-3 mb-3">
+                        <a href="#" class="text-light fs-4"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-light fs-4"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-light fs-4"><i class="fab fa-instagram"></i></a>
+                    </div>
+                    <div class="text-center">
+                        <i class="fas fa-star text-warning fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <hr class="text-light my-4">
+            <div class="row">
+                <div class="col-md-8">
+                    <p class="mb-0">
+                        <i class="fas fa-heart text-warning me-2"></i>
+                        Made with ❤️ for Kerala culture | Welcoming King Mahabali (Maveli) home
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <p class="mb-0">&copy; 2023 Onam Aghosham - Thantha Vibe</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

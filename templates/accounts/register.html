@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Onam Celebration{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="form-onam">
+                <h2 class="text-center text-success mb-4">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Join the Onam Celebration
+                </h2>
+                <p class="text-center mb-4">Register with your Swedish phone number to start the treasure hunt!</p>
+                
+                <!-- Registration form will be implemented later -->
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Registration form coming soon! This is a placeholder.
+                </div>
+                
+                <div class="text-center">
+                    <a href="{% url 'core:home' %}" class="btn btn-onam">
+                        <i class="fas fa-home me-2"></i>Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

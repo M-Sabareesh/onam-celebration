@@ -1,0 +1,154 @@
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  DATABASE_URL: "sqlite:///db.sqlite3"
+  SECRET_KEY: "test-secret-key-for-ci"
+  DEBUG: "False"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+before_script:
+  - python --version
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
+
+# Test Stage
+test:
+  stage: test
+  image: python:3.11-slim
+  services:
+    - postgres:13
+  variables:
+    POSTGRES_DB: onam_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/onam_test"
+  script:
+    # Install system dependencies
+    - apt-get update -qy
+    - apt-get install -y postgresql-client
+    
+    # Wait for PostgreSQL to be ready
+    - until pg_isready -h postgres -p 5432; do sleep 1; done
+    
+    # Run Django tests
+    - python manage.py collectstatic --noinput
+    - python manage.py makemigrations --check --dry-run
+    - python manage.py migrate
+    - python manage.py test
+    
+    # Code quality checks
+    - pip install flake8 coverage
+    - flake8 . --max-line-length=88 --exclude=venv,migrations
+    - coverage run --source='.' manage.py test
+    - coverage report
+    - coverage xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - coverage.xml
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+
+# Security checks
+security:
+  stage: test
+  image: python:3.11-slim
+  script:
+    - pip install safety bandit
+    - safety check
+    - bandit -r . -x tests,venv
+  allow_failure: true
+
+# Build Docker Image
+build:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    - main
+    - develop
+
+# Deploy to Staging
+deploy_staging:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deploying to staging environment"
+    # Add your deployment commands here
+    # Example for Docker Compose deployment:
+    # - docker-compose -f docker-compose.staging.yml up -d
+  environment:
+    name: staging
+    url: https://staging.onam-app.example.com
+  only:
+    - develop
+
+# Deploy to Production
+deploy_production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deploying to production environment"
+    # Add your production deployment commands here
+    # Example for Kubernetes deployment:
+    # - kubectl apply -f k8s/
+  environment:
+    name: production
+    url: https://onam-app.example.com
+  when: manual
+  only:
+    - main
+
+# Database migration job
+migrate:
+  stage: deploy
+  image: python:3.11-slim
+  script:
+    - source venv/bin/activate
+    - python manage.py migrate --noinput
+  when: manual
+  only:
+    - main
+    - develop
+
+# Collect static files
+collectstatic:
+  stage: deploy
+  image: python:3.11-slim
+  script:
+    - source venv/bin/activate
+    - python manage.py collectstatic --noinput
+  artifacts:
+    paths:
+      - staticfiles/
+    expire_in: 1 hour
+  only:
+    - main
+    - develop

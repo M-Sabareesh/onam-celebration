@@ -1,0 +1,144 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Approve Answers - {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1>✅ Approve Player Answers</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" style="padding: 10px; margin: 10px 0; border-radius: 4px; background-color: {% if message.tags == 'success' %}#d4edda{% elif message.tags == 'error' %}#f8d7da{% else %}#d1ecf1{% endif %};">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    {% if pending_answers %}
+        <p>There are <strong>{{ pending_answers.count }}</strong> answers waiting for approval.</p>
+        
+        <div style="margin: 20px 0;">
+            {% for answer in pending_answers %}
+                <div style="border: 1px solid #ddd; margin: 15px 0; padding: 15px; border-radius: 8px; background: #f9f9f9;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 200px; gap: 20px; align-items: start;">
+                        
+                        <!-- Answer Details -->
+                        <div>
+                            <h3 style="margin-top: 0; color: #007cba;">{{ answer.player.get_name_display }} ({{ answer.player.team }})</h3>
+                            <p><strong>Question {{ answer.question.order }}:</strong> {{ answer.question.question_text|truncatechars:100 }}</p>
+                            <p><strong>Question Type:</strong> {{ answer.question.get_question_type_display }}</p>
+                            <p><strong>Points Available:</strong> {{ answer.question.points }}</p>
+                            <p><strong>Submitted:</strong> {{ answer.submitted_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        
+                        <!-- Player Answer -->
+                        <div>
+                            <h4>Player's Answer:</h4>
+                            {% if answer.text_answer %}
+                                <div style="background: white; padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+                                    {{ answer.text_answer }}
+                                </div>
+                            {% endif %}
+                            
+                            {% if answer.photo_answer %}
+                                <div style="text-align: center;">
+                                    <img src="{{ answer.photo_answer.url }}" alt="Player's photo answer" 
+                                         style="max-width: 200px; max-height: 200px; border-radius: 4px; cursor: pointer;"
+                                         onclick="window.open('{{ answer.photo_answer.url }}', '_blank')">
+                                    <p><small>Click to view full size</small></p>
+                                </div>
+                            {% endif %}
+                            
+                            {% if answer.question.question_type == 'multiple_choice' %}
+                                <div style="background: white; padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+                                    <p><strong>Correct Answer:</strong> {{ answer.question.correct_answer }}</p>
+                                    <p><strong>Player Selected:</strong> {{ answer.text_answer|default:"No selection" }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div>
+                            <form method="post" style="margin-bottom: 10px;">
+                                {% csrf_token %}
+                                <input type="hidden" name="answer_id" value="{{ answer.id }}">
+                                <input type="hidden" name="action" value="approve">
+                                
+                                <div style="margin-bottom: 10px;">
+                                    <label for="points_{{ answer.id }}">Points to Award:</label>
+                                    <input type="number" name="points" id="points_{{ answer.id }}" 
+                                           value="{{ answer.question.points }}" min="0" max="{{ answer.question.points }}"
+                                           style="width: 60px; padding: 4px;">
+                                </div>
+                                
+                                <button type="submit" class="approve-btn" 
+                                        style="background-color: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-bottom: 5px;">
+                                    ✅ Approve
+                                </button>
+                            </form>
+                            
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="answer_id" value="{{ answer.id }}">
+                                <input type="hidden" name="action" value="reject">
+                                
+                                <button type="submit" class="reject-btn" 
+                                        style="background-color: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; width: 100%;"
+                                        onclick="return confirm('Are you sure you want to reject this answer?')">
+                                    ❌ Reject
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px;">
+            <h2>🎉 All caught up!</h2>
+            <p>There are no pending answers to review at the moment.</p>
+            <a href="{% url 'admin:index' %}" class="button">Back to Dashboard</a>
+        </div>
+    {% endif %}
+    
+    <div style="margin-top: 30px; text-align: center;">
+        <a href="{% url 'admin:index' %}" class="button">Back to Dashboard</a>
+        <a href="{% url 'admin:core_playeranswer_changelist' %}" class="button">View All Answers</a>
+    </div>
+</div>
+
+<style>
+.button {
+    background-color: #417690;
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+    margin: 5px;
+}
+
+.button:hover {
+    background-color: #205067;
+    color: white;
+    text-decoration: none;
+}
+
+.approve-btn:hover {
+    background-color: #218838 !important;
+}
+
+.reject-btn:hover {
+    background-color: #c82333 !important;
+}
+
+.alert {
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px 0;
+}
+</style>
+{% endblock %}

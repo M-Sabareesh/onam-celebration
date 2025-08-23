@@ -1,0 +1,190 @@
+{% extends "admin/base_site.html" %}
+{% load admin_urls static %}
+
+{% block title %}Manage Events - {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; Manage Events
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Manage Events</h1>
+
+<div class="module">
+    <h2>Create New Event</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="create_event" value="1">
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label for="name">Event Name:</label>
+                <input type="text" name="name" id="name" required>
+            </div>
+            
+            <div class="field-box">
+                <label for="event_type">Event Type:</label>
+                <select name="event_type" id="event_type" required>
+                    <option value="">Select Type</option>
+                    {% for value, label in event_types %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label for="description">Description:</label>
+                <textarea name="description" id="description" rows="3"></textarea>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label>
+                    <input type="checkbox" name="voting_enabled"> Enable Voting
+                </label>
+                <p class="help">Check this if teams should vote for each other</p>
+            </div>
+        </div>
+        
+        <div class="submit-row">
+            <input type="submit" value="Create Event" class="default">
+        </div>
+    </form>
+</div>
+
+<div class="module">
+    <h2>Existing Events</h2>
+    
+    {% for data in event_data %}
+    <div class="results">
+        <h3>{{ data.event.name }} ({{ data.event.get_event_type_display }})</h3>
+        
+        <div class="event-info">
+            <p><strong>Description:</strong> {{ data.event.description|default:"No description" }}</p>
+            <p><strong>Status:</strong> 
+                <span class="status-{{ data.event.is_active|yesno:'active,inactive' }}">
+                    {{ data.event.is_active|yesno:"Active,Inactive" }}
+                </span>
+            </p>
+            <p><strong>Voting:</strong> 
+                <span class="status-{{ data.event.voting_enabled|yesno:'enabled,disabled' }}">
+                    {{ data.event.voting_enabled|yesno:"Enabled,Disabled" }}
+                </span>
+            </p>
+            <p><strong>Created:</strong> {{ data.event.created_at|date:"M j, Y g:i A" }}</p>
+        </div>
+        
+        <div class="participating-teams">
+            <h4>Participating Teams:</h4>
+            {% if data.participations %}
+                <ul>
+                    {% for participation in data.participations %}
+                    <li>{{ participation.get_team_display }} (registered {{ participation.registered_at|date:"M j, Y" }})</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="help">No teams participating yet</p>
+            {% endif %}
+        </div>
+        
+        {% if data.available_teams %}
+        <div class="add-team">
+            <h4>Add Team to Event:</h4>
+            <form method="post" style="display: inline;">
+                {% csrf_token %}
+                <input type="hidden" name="add_participation" value="1">
+                <input type="hidden" name="event_id" value="{{ data.event.id }}">
+                <select name="team" required>
+                    <option value="">Select Team</option>
+                    {% for team_code, team_name in data.available_teams %}
+                    <option value="{{ team_code }}">{{ team_name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="submit" value="Add Team" class="default">
+            </form>
+        </div>
+        {% endif %}
+        
+        <div class="event-actions">
+            <a href="{% url 'admin:event_scoring' data.event.id %}" class="button">
+                Manage Scores
+            </a>
+            <a href="{% url 'admin:core_event_change' data.event.id %}" class="button">
+                Edit Event
+            </a>
+        </div>
+        
+        <hr>
+    </div>
+    {% empty %}
+    <p class="help">No events created yet. Create your first event above!</p>
+    {% endfor %}
+</div>
+
+<style>
+.event-info {
+    background: #f8f8f8;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+.participating-teams {
+    margin: 10px 0;
+}
+
+.participating-teams ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.add-team {
+    margin: 10px 0;
+    padding: 10px;
+    background: #e8f5e8;
+    border-radius: 4px;
+}
+
+.event-actions {
+    margin: 10px 0;
+}
+
+.event-actions .button {
+    margin-right: 10px;
+}
+
+.status-active, .status-enabled {
+    color: green;
+    font-weight: bold;
+}
+
+.status-inactive, .status-disabled {
+    color: #666;
+}
+
+.form-row {
+    margin-bottom: 15px;
+}
+
+.field-box {
+    margin-bottom: 10px;
+}
+
+.field-box label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.field-box input, .field-box select, .field-box textarea {
+    width: 100%;
+    max-width: 300px;
+}
+</style>
+{% endblock %}

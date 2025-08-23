@@ -1,0 +1,64 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <i class="fas fa-crown text-warning me-2"></i>
+        {{ site_header|default:"Onam Aghosham - Thantha Vibe Admin" }}
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}
+<div style="background: linear-gradient(135deg, #228B22, #FFD700); padding: 10px 20px;">
+    <nav style="display: flex; gap: 20px; align-items: center;">
+        <a href="{% url 'admin:index' %}" style="color: white; text-decoration: none; padding: 8px 15px; border-radius: 20px; background-color: rgba(255,255,255,0.2); transition: all 0.3s ease;">
+            <i class="fas fa-home me-1"></i>Dashboard
+        </a>
+        <a href="/custom-admin/approve-answers/" style="color: white; text-decoration: none; padding: 8px 15px; border-radius: 20px; background-color: rgba(255,255,255,0.2); transition: all 0.3s ease;">
+            <i class="fas fa-check-circle me-1"></i>Approve Answers
+        </a>
+        <a href="/custom-admin/bulk-upload-questions/" style="color: white; text-decoration: none; padding: 8px 15px; border-radius: 20px; background-color: rgba(255,255,255,0.2); transition: all 0.3s ease;">
+            <i class="fas fa-upload me-1"></i>Manage Questions
+        </a>
+        <a href="{% url 'admin:core_player_changelist' %}" style="color: white; text-decoration: none; padding: 8px 15px; border-radius: 20px; background-color: rgba(255,255,255,0.2); transition: all 0.3s ease;">
+            <i class="fas fa-users me-1"></i>Players
+        </a>
+        <a href="/custom-admin/dashboard/" style="color: white; text-decoration: none; padding: 8px 15px; border-radius: 20px; background-color: rgba(34,139,34,0.5); transition: all 0.3s ease;">
+            <i class="fas fa-tachometer-alt me-1"></i>Enhanced Dashboard
+        </a>
+        
+        <div style="margin-left: auto; color: white;">
+            {% if user.is_authenticated %}
+                <span style="margin-right: 15px;">
+                    <i class="fas fa-user me-1"></i>Welcome, {{ user.username }}!
+                </span>
+                <a href="{% url 'admin:logout' %}" style="color: #ffc107; text-decoration: none; padding: 5px 10px; border-radius: 15px; background-color: rgba(255,193,7,0.2);">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+</div>
+
+<style>
+#site-name a {
+    color: white !important;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+#site-name a:hover {
+    color: #FFD700 !important;
+    transform: scale(1.02);
+}
+
+nav a:hover {
+    background-color: rgba(255,255,255,0.3) !important;
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

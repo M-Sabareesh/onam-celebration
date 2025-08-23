@@ -1,0 +1,10 @@
+# Core requirements for quick testing - install these first
+Django>=4.2,<5.0
+djangorestframework
+django-cors-headers
+django-environ
+psycopg2-binary
+dj-database-url
+whitenoise
+Pillow
+gunicorn
