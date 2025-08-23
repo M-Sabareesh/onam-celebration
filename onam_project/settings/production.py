@@ -8,6 +8,12 @@ from sentry_sdk.integrations.django import DjangoIntegration
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
+ALLOWED_HOSTS = [
+    'onam-celebration.onrender.com',
+    'localhost',
+    '127.0.0.1',
+]
+
 # Security Settings
 SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = 31536000
