@@ -25,7 +25,7 @@
                         
                         <!-- Answer Details -->
                         <div>
-                            <h3 style="margin-top: 0; color: #007cba;">{{ answer.player.name }} ({{ answer.player.team }})</h3>
+                            <h3 style="margin-top: 0; color: #007cba;">{{ answer.player.name }} ({{ answer.player.get_team_display }})</h3>
                             <p><strong>Question {{ answer.question.order }}:</strong> {{ answer.question.question_text|truncatechars:100 }}</p>
                             <p><strong>Question Type:</strong> {{ answer.question.get_question_type_display }}</p>
                             <p><strong>Points Available:</strong> {{ answer.question.points }}</p>
