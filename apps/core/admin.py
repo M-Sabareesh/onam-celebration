@@ -476,15 +476,16 @@ class PlayerAnswerAdmin(admin.ModelAdmin):
     approval_status.short_description = 'Status'
     
     def action_buttons(self, obj):
+        """Action buttons for approving/rejecting answers - only available in custom admin"""
         if not obj.is_correct and obj.points_awarded == 0:
-            approve_url = reverse('admin:approve_single_answer', args=[obj.id])
             return format_html(
-                '<button onclick="approveAnswer({}, \'approve\')" class="button">Approve</button> '
-                '<button onclick="approveAnswer({}, \'reject\')" class="button">Reject</button>',
-                obj.id, obj.id
+                '<span style="color: orange;">Pending Review</span>'
             )
-        return "Processed"
-    action_buttons.short_description = 'Actions'
+        elif obj.is_correct:
+            return format_html('<span style="color: green;">✓ Approved</span>')
+        else:
+            return format_html('<span style="color: red;">✗ Rejected</span>')
+    action_buttons.short_description = 'Status'
     
     def approve_answers(self, request, queryset):
         for answer in queryset:

@@ -43,7 +43,7 @@
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span>
                                                     <i class="fas fa-user text-muted me-2"></i>
-                                                    {{ player.get_name_display }}
+                                                    {{ player.name }}
                                                 </span>
                                                 <span class="badge bg-{% if player.score > 0 %}success{% else %}secondary{% endif %}">
                                                     {{ player.score }} pts
@@ -158,7 +158,7 @@
                                         {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
                                     </td>
                                     <td>
-                                        <strong>{{ player.get_name_display }}</strong>
+                                        <strong>{{ player.name }}</strong>
                                     </td>
                                     <td>
                                         <span class="badge bg-primary">{{ player.team }}</span>

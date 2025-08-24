@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ player.get_name_display }} - Treasure Hunt - Onam Celebration{% endblock %}
+{% block title %}{{ player.name }} - Treasure Hunt - Onam Celebration{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -13,7 +13,7 @@
                     Onam Treasure Hunt
                 </h2>
                 <p class="lead">Ready for Onam celebration? Complete these tasks and answer questions!</p>
-                <p class="text-muted">Player: <strong>{{ player.get_name_display }}</strong> | Team: <strong>{{ player.team }}</strong></p>
+                <p class="text-muted">Player: <strong>{{ player.name }}</strong> | Team: <strong>{{ player.team }}</strong></p>
             </div>
         </div>
     </div>

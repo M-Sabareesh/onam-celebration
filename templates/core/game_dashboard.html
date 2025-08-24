@@ -188,7 +188,7 @@
                         <div>
                             <span class="rank-badge rank-{{ forloop.counter }}">{{ forloop.counter }}</span>
                             <span class="ms-3 fw-bold{% if leader.id == player.id %} text-success{% endif %}">
-                                {{ leader.get_name_display }}
+                                {{ leader.name }}
                                 {% if leader.id == player.id %}<i class="fas fa-star ms-1"></i>{% endif %}
                             </span>
                         </div>
