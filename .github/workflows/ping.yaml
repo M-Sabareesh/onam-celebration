@@ -2,26 +2,31 @@ name: Keep App + DB Awake
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # every 10 minutes
+    - cron: "*/5 * * * *"   # every 5 minutes
   workflow_dispatch:
 
 jobs:
   ping:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
-      - name: Ping app & DB-backed endpoints
+      - name: Login and Ping Admin + DB
         run: |
-          while true; do
-            echo "Logging in..."
-            curl -s -c cookies.txt -d "username=OnamAdmin&password=ThanthaVibe123" \
-              https://onam-celebration.onrender.com/custom-admin/login/ > /dev/null
+          for i in {1..5}; do
+            echo "Login attempt $i at $(date)"
+            
+            # Login to Django admin and save cookies
+            curl -s -c cookies.txt -d "username=OnamAdmin&password=ThanthaVibe123&next=/custom-admin/" \
+              -X POST https://onam-celebration.onrender.com/custom-admin/login/ > /dev/null
 
-            echo "Pinging DB-backed URLs..."
-            curl -s -b cookies.txt https://onam-celebration.onrender.com/events/ > /dev/null
+            # Use cookie to hit authenticated/admin endpoints
             curl -s -b cookies.txt https://onam-celebration.onrender.com/custom-admin/ > /dev/null
+
+            # Hit other DB-backed endpoints
+            curl -s -b cookies.txt https://onam-celebration.onrender.com/events/ > /dev/null
             curl -s -b cookies.txt https://onam-celebration.onrender.com/about/ > /dev/null
             curl -s -b cookies.txt https://onam-celebration.onrender.com/select-player/ > /dev/null
 
-            echo "Ping done at $(date)"
-            sleep 600   # wait 10 min
+            echo "Ping cycle $i done."
+            sleep 10
           done
+          echo "All 5 login + ping cycles completed."
