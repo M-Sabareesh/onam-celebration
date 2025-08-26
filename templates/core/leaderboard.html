@@ -1,378 +1,53 @@
 {% extends 'base.html' %}
 {% load core_extras %}
 
-{% block title %}Leaderboard - ഓണാഘോഷം{% endblock %}
-
-{% block extra_css %}
-<style>
-    .results-hidden {
-        display: none;
-    }
-    
-    .reveal-button {
-        background: linear-gradient(45deg, var(--onam-gold), var(--kerala-yellow));
-        border: none;
-        color: #333;
-        font-weight: bold;
-        padding: 20px 40px;
-        border-radius: 25px;
-        font-size: 1.5rem;
-        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .reveal-button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 35px rgba(255, 215, 0, 0.6);
-    }
-    
-    .reveal-button::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-        transition: left 0.5s;
-    }
-    
-    .reveal-button:hover::before {
-        left: 100%;
-    }
-    
-    .winner-animation {
-        opacity: 0;
-        transform: scale(0.8);
-        animation: winnerReveal 1.5s ease-out forwards;
-    }
-    
-    @keyframes winnerReveal {
-        0% {
-            opacity: 0;
-            transform: scale(0.8) rotateY(-90deg);
-        }
-        50% {
-            opacity: 0.7;
-            transform: scale(1.1) rotateY(0deg);
-        }
-        100% {
-            opacity: 1;
-            transform: scale(1) rotateY(0deg);
-        }
-    }
-    
-    .confetti {
-        position: absolute;
-        width: 10px;
-        height: 10px;
-        background: var(--onam-gold);
-        animation: confettiFall 3s linear infinite;
-    }
-    
-    @keyframes confettiFall {
-        0% {
-            transform: translateY(-100vh) rotate(0deg);
-            opacity: 1;
-        }
-        100% {
-            transform: translateY(100vh) rotate(720deg);
-            opacity: 0;
-        }
-    }
-    
-    .team-card-reveal {
-        opacity: 0;
-        transform: translateY(50px);
-        animation: cardReveal 0.8s ease-out forwards;
-    }
-    
-    @keyframes cardReveal {
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .crown-glow {
-        animation: crownGlow 2s ease-in-out infinite alternate;
-    }
-    
-    @keyframes crownGlow {
-        from {
-            text-shadow: 0 0 10px var(--onam-gold);
-        }
-        to {
-            text-shadow: 0 0 20px var(--onam-gold), 0 0 30px var(--onam-gold);
-        }
-    }
-    
-    .player-reveal {
-        opacity: 0;
-        transform: translateX(-50px);
-        animation: playerSlideIn 0.6s ease-out forwards;
-    }
-    
-    @keyframes playerSlideIn {
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    .loading-spinner {
-        border: 4px solid rgba(255, 215, 0, 0.3);
-        border-radius: 50%;
-        border-top: 4px solid var(--onam-gold);
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-        margin: 20px auto;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .podium {
-        display: flex;
-        justify-content: center;
-        align-items: end;
-        gap: 20px;
-        margin: 30px 0;
-    }
-    
-    .podium-step {
-        background: linear-gradient(145deg, var(--onam-gold), var(--kerala-yellow));
-        border-radius: 10px 10px 0 0;
-        text-align: center;
-        color: #333;
-        font-weight: bold;
-        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .podium-first {
-        height: 150px;
-        width: 120px;
-        line-height: 150px;
-        font-size: 1.2rem;
-    }
-    
-    .podium-second {
-        height: 120px;
-        width: 100px;
-        line-height: 120px;
-        font-size: 1.1rem;
-        background: linear-gradient(145deg, #C0C0C0, #A8A8A8);
-    }
-    
-    .podium-third {
-        height: 90px;
-        width: 80px;
-        line-height: 90px;
-        font-size: 1rem;
-        background: linear-gradient(145deg, #CD7F32, #B8860B);
-    }
-    
-    .maveli-celebration {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 1000;
-        background: rgba(0,0,0,0.9);
-        border-radius: 20px;
-        padding: 30px;
-        text-align: center;
-        color: white;
-        display: none;
-    }
-    
-    .maveli-dance {
-        animation: maveliDance 2s ease-in-out infinite;
-    }
-    
-    @keyframes maveliDance {
-        0%, 100% { transform: translateY(0px) rotate(0deg); }
-        25% { transform: translateY(-10px) rotate(5deg); }
-        75% { transform: translateY(-5px) rotate(-5deg); }
-    }
-</style>
-{% endblock %}
+{% block title %}Leaderboard - Onam Celebration{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="text-center mb-5">
-        <h1 class="display-4 text-success mb-3 malayalam-text">
+        <h1 class="display-4 text-success mb-3">
             <i class="fas fa-trophy me-2"></i>
-            ഓണാഘോഷം ലീഡർബോർഡ്
+            Onam Aghosham Leaderboard
         </h1>
-        <p class="lead">Discover the champions of our Onam celebration!</p>
+        <p class="lead">See how teams and players are performing in treasure hunt and events!</p>
     </div>
 
-    <!-- Initial Hidden State -->
-    <div id="hiddenState" class="text-center">
-        <div class="card bg-light border-warning">
-            <div class="card-body py-5">
-                <div class="mb-4">
-                    <img src="/media/Maveli/Maveli.jpg" alt="Maveli" 
-                         class="rounded-circle maveli-dance" 
-                         style="width: 150px; height: 150px; object-fit: cover; border: 5px solid var(--onam-gold);">
-                </div>
-                <h3 class="text-warning mb-3">
-                    <i class="fas fa-crown crown-glow me-2"></i>
-                    Results Are Ready!
-                </h3>
-                <p class="lead mb-4">King Mahabali is waiting to crown the champions of this year's celebration!</p>
-                <button id="revealButton" class="reveal-button">
-                    <i class="fas fa-trophy me-3"></i>
-                    Show Team Rankings
-                    <i class="fas fa-star ms-3"></i>
-                </button>
-                <div class="mt-3">
-                    <small class="text-muted">Click to reveal the winners with a spectacular celebration!</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Animation -->
-    <div id="loadingAnimation" class="text-center" style="display: none;">
-        <div class="card">
-            <div class="card-body py-5">
-                <h3 class="text-warning mb-4">
-                    <i class="fas fa-magic me-2"></i>
-                    Preparing the Grand Reveal...
-                </h3>
-                <div class="loading-spinner"></div>
-                <p class="text-muted mt-3">Maveli is calculating the final scores...</p>
-                <div class="mt-4">
-                    <div class="d-flex justify-content-center gap-3">
-                        <img src="/media/Maveli/Maveli2.jpg" alt="Maveli" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover; animation: float 2s ease-in-out infinite;">
-                        <img src="/media/Maveli/Maveli4.jpg" alt="Maveli" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover; animation: float 2s ease-in-out infinite 0.5s;">
-                        <img src="/media/Maveli/Maveli2.png" alt="Maveli" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover; animation: float 2s ease-in-out infinite 1s;">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Results Section (Initially Hidden) -->
-    <div id="resultsSection" class="results-hidden">
-
-    <!-- Results Section (Initially Hidden) -->
-    <div id="resultsSection" class="results-hidden">
-        
-        <!-- Maveli Celebration Modal -->
-        <div id="maveliCelebration" class="maveli-celebration">
-            <div class="text-center">
-                <img src="/media/Maveli/Maveli.jpg" alt="Celebrating Maveli" 
-                     class="rounded-circle mb-3 maveli-dance" 
-                     style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--onam-gold);">
-                <h3 class="text-warning mb-2">🎉 Maveli's Blessing! 🎉</h3>
-                <p>The champions have been chosen!</p>
-            </div>
-        </div>
-
-        <!-- Winner Podium -->
-        <div class="winner-animation">
-            <div class="card border-warning mb-5">
-                <div class="card-header bg-warning text-dark text-center">
-                    <h2 class="mb-0">
-                        <i class="fas fa-crown crown-glow me-2"></i>
-                        🏆 TEAM CHAMPIONS 🏆
-                        <i class="fas fa-crown crown-glow ms-2"></i>
-                    </h2>
+    <!-- Team Standings -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Team Standings (Treasure Hunt + Events)
+                    </h3>
                 </div>
                 <div class="card-body">
-                    <div class="podium">
+                    <div class="row">
                         {% for team_name, team_data in team_standings %}
-                            {% if forloop.counter <= 3 %}
-                                <div class="podium-step podium-{% if forloop.counter == 1 %}first{% elif forloop.counter == 2 %}second{% else %}third{% endif %}" 
-                                     style="animation-delay: {{ forloop.counter }}s;">
-                                    <div class="position-absolute top-0 start-50 translate-middle" style="margin-top: -20px; font-size: 2rem;">
-                                        {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% else %}🥉{% endif %}
-                                    </div>
-                                    <div>
-                                        <strong>{{ team_name }}</strong><br>
-                                        <span class="fs-5">{{ team_data.total_score }} pts</span>
-                                    </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-{% if forloop.counter == 1 %}warning{% elif forloop.counter == 2 %}secondary{% elif forloop.counter == 3 %}dark{% else %}light{% endif %}">
+                                <div class="card-header bg-{% if forloop.counter == 1 %}warning{% elif forloop.counter == 2 %}secondary{% elif forloop.counter == 3 %}dark{% else %}light{% endif %} text-{% if forloop.counter <= 3 %}white{% else %}dark{% endif %}">
+                                    <h5 class="mb-0">
+                                        {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}.{% endif %}
+                                        {{ team_name }}
+                                        <span class="float-end">{{ team_data.total_score }} pts</span>
+                                    </h5>
                                 </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Detailed Team Standings -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="card team-card-reveal" style="animation-delay: 2s;">
-                    <div class="card-header bg-primary text-white">
-                        <h3 class="mb-0">
-                            <i class="fas fa-users me-2"></i>
-                            Complete Team Rankings
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            {% for team_name, team_data in team_standings %}
-                            <div class="col-md-6 mb-3">
-                                <div class="card border-{% if forloop.counter == 1 %}warning{% elif forloop.counter == 2 %}secondary{% elif forloop.counter == 3 %}dark{% else %}light{% endif %} team-card-reveal" style="animation-delay: {{ forloop.counter|add:2 }}s;">
-                                    <div class="card-header bg-{% if forloop.counter == 1 %}warning{% elif forloop.counter == 2 %}secondary{% elif forloop.counter == 3 %}dark{% else %}light{% endif %} text-{% if forloop.counter <= 3 %}white{% else %}dark{% endif %}">
-                                        <h5 class="mb-0">
-                                            {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}.{% endif %}
-                                            {{ team_name }}
-                                            <span class="float-end">{{ team_data.total_score }} pts</span>
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <h6 class="text-muted mb-2">Team Members:</h6>
-                                                {% for player in team_data.players %}
-                                                <div class="d-flex justify-content-between align-items-center mb-1 player-reveal" style="animation-delay: {{ forloop.counter|add:3 }}s;">
-                                                    <span>
-                                                        <i class="fas fa-user text-muted me-2"></i>
-                                                        {{ player.name }}
-                                                    </span>
-                                                    <span class="badge bg-{% if player.score > 0 %}success{% else %}secondary{% endif %}">
-                                                        {{ player.score }} pts
-                                                    </span>
-                                                </div>
-                                                {% endfor %}
-                                            </div>
-                                            <div class="col-md-6">
-                                                <h6 class="text-muted mb-2">Score Breakdown:</h6>
-                                                <div class="mb-2">
-                                                    <small class="text-muted">Treasure Hunt:</small>
-                                                    <span class="badge bg-info ms-2">{{ team_data.treasure_hunt_score }} pts</span>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <small class="text-muted">Events:</small>
-                                                    <span class="badge bg-success ms-2">{{ team_data.event_score|floatformat:1 }} pts</span>
-                                                </div>
-                                                <div>
-                                                    <small class="text-muted">Team Members:</small>
-                                                    <span class="badge bg-primary ms-2">{{ team_data.player_count }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-2">Team Members:</h6>
+                                            {% for player in team_data.players %}
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span>
+                                                    <i class="fas fa-user text-muted me-2"></i>
+                                                    {{ player.name }}
+                                                </span>
+                                                <span class="badge bg-{% if player.score > 0 %}success{% else %}secondary{% endif %}">
+                                                    {{ player.score }} pts
+                                                </span>
                                             </div>
                                             {% endfor %}
                                         </div>
@@ -453,158 +128,76 @@
     </div>
     {% endif %}
 
-        <!-- Individual Player Champions -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <button id="showPlayersButton" class="btn btn-warning btn-lg w-100 mb-4" style="display: none;">
-                    <i class="fas fa-star me-2"></i>
-                    Reveal Individual Champions
-                    <i class="fas fa-user-crown ms-2"></i>
-                </button>
-                
-                <div id="playerRankings" class="card" style="display: none;">
-                    <div class="card-header bg-success text-white">
-                        <h3 class="mb-0">
-                            <i class="fas fa-user-friends me-2"></i>
-                            🌟 Individual Player Champions 🌟
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <!-- Top 3 Players Podium -->
-                        <div class="text-center mb-4">
-                            <h4 class="text-success mb-4">
-                                <i class="fas fa-crown crown-glow me-2"></i>
-                                Top Individual Performers
-                            </h4>
-                            <div class="podium">
-                                {% for player in players|slice:":3" %}
-                                    <div class="podium-step podium-{% if forloop.counter == 1 %}first{% elif forloop.counter == 2 %}second{% else %}third{% endif %}" 
-                                         style="animation-delay: {{ forloop.counter|add:5 }}s;">
-                                        <div class="position-absolute top-0 start-50 translate-middle" style="margin-top: -20px; font-size: 2rem;">
-                                            {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% else %}🥉{% endif %}
-                                        </div>
-                                        <div>
-                                            <strong>{{ player.name }}</strong><br>
-                                            <small>{{ player.get_team_display }}</small><br>
-                                            <span class="fs-5">{{ player.score }} pts</span>
-                                        </div>
-                                    </div>
+    <!-- Individual Player Rankings -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-friends me-2"></i>
+                        Individual Player Rankings
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Player</th>
+                                    <th>Team</th>
+                                    <th>Score</th>
+                                    <th>Level</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for player in players %}
+                                <tr>
+                                    <td>
+                                        {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ player.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ player.get_team_display }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-success">{{ player.score }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">Level {{ player.current_level }}</span>
+                                    </td>
+                                    <td>
+                                        {% if player.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        No players have started the game yet. Be the first to join!
+                                    </td>
+                                </tr>
                                 {% endfor %}
-                            </div>
-                        </div>
-                        
-                        <!-- Complete Player Rankings Table -->
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Rank</th>
-                                        <th>Player</th>
-                                        <th>Team</th>
-                                        <th>Score</th>
-                                        <th>Level</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for player in players %}
-                                    <tr class="player-reveal" style="animation-delay: {{ forloop.counter|add:6 }}s;">
-                                        <td>
-                                            {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
-                                        </td>
-                                        <td>
-                                            <strong {% if forloop.counter <= 3 %}class="text-warning"{% endif %}>{{ player.name }}</strong>
-                                            {% if forloop.counter == 1 %}
-                                                <span class="badge bg-warning text-dark ms-2">👑 Champion</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-primary">{{ player.get_team_display }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="fw-bold text-success">{{ player.score }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info">Level {{ player.current_level }}</span>
-                                        </td>
-                                        <td>
-                                            {% if player.is_active %}
-                                                <span class="badge bg-success">Active</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">Inactive</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted">
-                                            No players have started the game yet. Be the first to join!
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
-
-        
-        {% if events_with_scores %}
-        <!-- Event Results (Optional) -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="card team-card-reveal" style="animation-delay: 8s;">
-                    <div class="card-header bg-info text-white">
-                        <h3 class="mb-0">
-                            <i class="fas fa-star me-2"></i>
-                            Event Competition Results
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        {% for event_detail in events_with_scores %}
-                        <div class="mb-4">
-                            <h5 class="text-info mb-3">
-                                <i class="fas fa-music me-2"></i>{{ event_detail.event.name }}
-                            </h5>
-                            <div class="row">
-                                {% for team_code, team_score in event_detail.scores.items %}
-                                {% if team_code != 'unassigned' %}
-                                <div class="col-md-3 col-sm-6 mb-2">
-                                    <div class="card border-primary team-card-reveal" style="animation-delay: {{ forloop.counter|add:8 }}s;">
-                                        <div class="card-body text-center py-2">
-                                            <h6 class="card-title mb-1">{{ team_choices|get_item:team_code }}</h6>
-                                            <p class="card-text mb-1">
-                                                <span class="badge bg-primary">{{ team_score.total|floatformat:1 }} pts</span>
-                                            </p>
-                                            <small class="text-muted">{{ team_score.vote_count }} vote{{ team_score.vote_count|pluralize }}</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-                                {% endfor %}
-                            </div>
-                            {% if event_detail.total_votes %}
-                            <p class="text-muted mb-0"><small>Total votes received: {{ event_detail.total_votes }}</small></p>
-                            {% endif %}
-                        </div>
-                        {% if not forloop.last %}<hr>{% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-    </div> <!-- End Results Section -->
+    </div>
 
     <!-- Call to Action -->
     <div class="row mt-5">
         <div class="col-12 text-center">
             <div class="card bg-light">
                 <div class="card-body">
-                    <h4 class="text-success mb-3 malayalam-text">Join the Competition!</h4>
+                    <h4 class="text-success mb-3">Join the Competition!</h4>
                     <p class="lead mb-3">Ready to climb the leaderboard in treasure hunt and vote in events?</p>
                     <a href="{% url 'core:select_player' %}" class="btn btn-onam btn-lg me-3">
                         <i class="fas fa-play me-2"></i>Start Treasure Hunt
@@ -620,105 +213,20 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const revealButton = document.getElementById('revealButton');
-    const hiddenState = document.getElementById('hiddenState');
-    const loadingAnimation = document.getElementById('loadingAnimation');
-    const resultsSection = document.getElementById('resultsSection');
-    const showPlayersButton = document.getElementById('showPlayersButton');
-    const playerRankings = document.getElementById('playerRankings');
-    const maveliCelebration = document.getElementById('maveliCelebration');
+<style>
+.card {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
 
-    // Function to create confetti
-    function createConfetti() {
-        for (let i = 0; i < 50; i++) {
-            const confetti = document.createElement('div');
-            confetti.className = 'confetti';
-            confetti.style.left = Math.random() * 100 + 'vw';
-            confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
-            confetti.style.backgroundColor = ['#FFD700', '#FFA500', '#FF8C00', '#228B22', '#DC143C'][Math.floor(Math.random() * 5)];
-            confetti.style.animationDelay = Math.random() * 3 + 's';
-            document.body.appendChild(confetti);
-            
-            // Remove confetti after animation
-            setTimeout(() => {
-                confetti.remove();
-            }, 6000);
-        }
-    }
+.table th {
+    border-top: none;
+    background-color: #f8f9fa;
+}
 
-    // Function to play celebration sound (if available)
-    function playCelebrationSound() {
-        try {
-            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAaBjiR1/LNeSsFJXfI8N2QQAoUXrTp66hVFApGn+DyvmAaBjiR1/LNeSsFJXfI8N2QQAoUXrTp66hVFApGn+DyvmAaBjmR1/LNeSsFJXfI8N2QQAoUXrTp66hVFApGn+DyvmAaBjmR1/LNeSsFJXfI8N2QQAoUXrTp66hVFApGn+DyvmAaBjmR1/LNeSsFJXfI8N2QQAoUXrTp66hVFApGn+DyvmAaBjmR1/LNeSsFJXfI8N2QQAoUXrTp66hVFApGn+DyvmAaBjmR1/LNeSsFJXfI8N2QQAoUXrTp66hVFApGn+DyvmAaBjmR1/LNeSsFJXfI8N2QQAoUXrTp66hVFApGn+DyvmAaBjmR1/LNeSsFJXfI8N2QQAoUXrTp66hVFApGn+DyvmAaBjmR1/LNeSsFJXfI8N2QQAoUXrTp66hVFApGn+DyvmAaBjmR1/LNeSsFJXfI8N2QQAoUXrTp66hVFA==');
-            audio.play().catch(() => {
-                // Ignore audio play errors
-            });
-        } catch (e) {
-            // Ignore audio errors
-        }
-    }
-
-    // Main reveal function
-    revealButton.addEventListener('click', function() {
-        // Hide initial state
-        hiddenState.style.display = 'none';
-        
-        // Show loading animation
-        loadingAnimation.style.display = 'block';
-        
-        // Create confetti
-        createConfetti();
-        
-        // Play celebration sound
-        playCelebrationSound();
-        
-        // After loading delay, show results
-        setTimeout(() => {
-            loadingAnimation.style.display = 'none';
-            resultsSection.style.display = 'block';
-            resultsSection.classList.remove('results-hidden');
-            
-            // Show Maveli celebration modal briefly
-            maveliCelebration.style.display = 'block';
-            setTimeout(() => {
-                maveliCelebration.style.display = 'none';
-                
-                // Show the button to reveal individual players after team results
-                setTimeout(() => {
-                    showPlayersButton.style.display = 'block';
-                }, 3000);
-            }, 2000);
-            
-        }, 3000); // 3 second loading time
-    });
-
-    // Individual players reveal
-    showPlayersButton.addEventListener('click', function() {
-        showPlayersButton.style.display = 'none';
-        playerRankings.style.display = 'block';
-        
-        // Create more confetti for individual winners
-        createConfetti();
-        
-        // Show Maveli celebration again
-        maveliCelebration.style.display = 'block';
-        setTimeout(() => {
-            maveliCelebration.style.display = 'none';
-        }, 2000);
-    });
-
-    // Optional: Auto-scroll to results when revealed
-    function scrollToResults() {
-        resultsSection.scrollIntoView({ 
-            behavior: 'smooth',
-            block: 'start'
-        });
-    }
-});
-</script>
+.badge {
+    font-size: 0.8em;
+}
+</style>
 {% endblock %}
