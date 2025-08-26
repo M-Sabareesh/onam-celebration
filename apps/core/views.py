@@ -217,8 +217,16 @@ class LeaderboardView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from .models import Event, EventVote, IndividualEventScore
+        from .models import Event, EventVote
         from django.db.models import Avg, Count, Sum
+        
+        # Try to import IndividualEventScore, but handle if it doesn't exist
+        try:
+            from .models import IndividualEventScore
+            has_individual_scoring = True
+        except ImportError:
+            IndividualEventScore = None
+            has_individual_scoring = False
         
         # Get all players with their teams
         players = Player.objects.all()[:20]
@@ -251,15 +259,19 @@ class LeaderboardView(TemplateView):
         
         # Calculate individual event scores that contribute to team points
         for team_code in team_data.keys():
-            team_players = Player.objects.filter(team=team_code)
-            try:
-                individual_team_points = IndividualEventScore.objects.filter(
-                    player__in=team_players
-                ).aggregate(Sum('team_points'))['team_points__sum'] or 0
-                team_data[team_code]['individual_event_score'] = float(individual_team_points)
-            except Exception as e:
-                # Handle case where IndividualEventScore table doesn't exist yet
-                print(f"Warning: IndividualEventScore table not available: {e}")
+            if has_individual_scoring:
+                team_players = Player.objects.filter(team=team_code)
+                try:
+                    individual_team_points = IndividualEventScore.objects.filter(
+                        player__in=team_players
+                    ).aggregate(Sum('team_points'))['team_points__sum'] or 0
+                    team_data[team_code]['individual_event_score'] = float(individual_team_points)
+                except Exception as e:
+                    # Handle case where IndividualEventScore table doesn't exist yet
+                    print(f"Warning: IndividualEventScore table not available: {e}")
+                    team_data[team_code]['individual_event_score'] = 0.0
+            else:
+                # IndividualEventScore model not available
                 team_data[team_code]['individual_event_score'] = 0.0
         
         # Calculate team event scores for each team
@@ -291,9 +303,12 @@ class LeaderboardView(TemplateView):
         # Get detailed event information for display
         event_details = []
         for event in active_events:
-            try:
-                individual_scores = IndividualEventScore.objects.filter(event=event).order_by('-points')[:5] if event.allows_individual_participation else []
-            except Exception:
+            if has_individual_scoring:
+                try:
+                    individual_scores = IndividualEventScore.objects.filter(event=event).order_by('-points')[:5] if event.allows_individual_participation else []
+                except Exception:
+                    individual_scores = []
+            else:
                 individual_scores = []
             
             event_info = {
@@ -305,9 +320,12 @@ class LeaderboardView(TemplateView):
             event_details.append(event_info)
         
         # Get top individual performers across all events
-        try:
-            top_individual_performers = IndividualEventScore.objects.select_related('player', 'event').order_by('-points')[:10]
-        except Exception:
+        if has_individual_scoring:
+            try:
+                top_individual_performers = IndividualEventScore.objects.select_related('player', 'event').order_by('-points')[:10]
+            except Exception:
+                top_individual_performers = []
+        else:
             top_individual_performers = []
         
         context.update({

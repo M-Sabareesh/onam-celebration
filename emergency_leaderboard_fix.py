@@ -11,9 +11,26 @@ from django.core.management import execute_from_command_line
 from django.db import connection
 
 def setup_django():
-    """Setup Django environment for production"""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'onam_project.settings.production')
-    django.setup()
+    """Setup Django environment"""
+    # Try different settings modules in order of preference
+    settings_modules = [
+        'onam_project.settings.base',
+        'onam_project.settings.production', 
+        'onam_project.settings'
+    ]
+    
+    for settings_module in settings_modules:
+        try:
+            os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_module)
+            django.setup()
+            print(f"✅ Django setup successful with {settings_module}")
+            return True
+        except Exception as e:
+            print(f"⚠ Failed to setup with {settings_module}: {e}")
+            continue
+    
+    print("❌ Failed to setup Django with any settings module")
+    return False
 
 def check_missing_tables():
     """Check which tables are missing"""
@@ -29,17 +46,35 @@ def check_missing_tables():
     
     with connection.cursor() as cursor:
         for table in required_tables:
-            cursor.execute("""
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_name = %s;
-            """, [table])
-            
-            if cursor.fetchone():
-                print(f"  ✅ {table} exists")
-            else:
-                print(f"  ❌ {table} MISSING")
-                missing_tables.append(table)
+            try:
+                # Try SQLite syntax first
+                cursor.execute("""
+                    SELECT name FROM sqlite_master 
+                    WHERE type='table' AND name = ?;
+                """, [table])
+                
+                if cursor.fetchone():
+                    print(f"  ✅ {table} exists")
+                else:
+                    print(f"  ❌ {table} MISSING")
+                    missing_tables.append(table)
+            except Exception:
+                try:
+                    # Try PostgreSQL/MySQL syntax
+                    cursor.execute("""
+                        SELECT table_name 
+                        FROM information_schema.tables 
+                        WHERE table_name = %s;
+                    """, [table])
+                    
+                    if cursor.fetchone():
+                        print(f"  ✅ {table} exists")
+                    else:
+                        print(f"  ❌ {table} MISSING")
+                        missing_tables.append(table)
+                except Exception as e:
+                    print(f"  ⚠ Could not check {table}: {e}")
+                    missing_tables.append(table)
     
     return missing_tables
 
