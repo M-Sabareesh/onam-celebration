@@ -58,20 +58,44 @@ if SENTRY_DSN:
         send_default_pii=True
     )
 
-# Cache
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('REDIS_URL', default='redis://localhost:6379/1'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+# Cache - with Redis fallback handling
+try:
+    import redis
+    # Test if Redis URL is available and working
+    redis_url = env('REDIS_URL', default='redis://localhost:6379/1')
+    r = redis.from_url(redis_url)
+    r.ping()  # Test connection
+    
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': redis_url,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            }
         }
     }
-}
-
-# Session engine
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
+    
+    # Use cache-based sessions
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+    
+    print("✓ Using Redis for cache and sessions")
+    
+except (ImportError, redis.exceptions.ConnectionError, Exception):
+    # Fallback to database cache and sessions
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'django_cache_table',
+        }
+    }
+    
+    # Use database-based sessions
+    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+    SESSION_CACHE_ALIAS = None
+    
+    print("⚠ Redis unavailable, using database cache and sessions")
 
 # SMS Backend - Use actual SMS service in production
 SMS_BACKEND = 'twilio'  # or 'messagebird'
