@@ -284,7 +284,7 @@ class LeaderboardView(TemplateView):
             event_details.append(event_info)
         
         context.update({
-            'page_title': 'Onam Aghosham - Complete Leaderboard',
+            'page_title': 'ഓണാഘോഷം - Complete Leaderboard',
             'players': players,
             'team_standings': sorted_teams,
             'events': event_details,

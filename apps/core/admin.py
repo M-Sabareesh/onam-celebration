@@ -10,9 +10,9 @@ from .models import Player, GameSession, TreasureHuntQuestion, PlayerAnswer, Eve
 
 
 class CustomAdminSite(admin.AdminSite):
-    site_header = "Onam Aghosham - Thantha Vibe Admin"
-    site_title = "Onam Aghosham Admin"
-    index_title = "Welcome to Onam Aghosham - Thantha Vibe Administration"
+    site_header = "ഓണാഘോഷം Admin"
+    site_title = "ഓണാഘോഷം Admin"
+    index_title = "Welcome to ഓണാഘോഷം Administration"
     
     def get_urls(self):
         urls = super().get_urls()
