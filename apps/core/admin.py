@@ -703,8 +703,32 @@ class EventScoreAdmin(admin.ModelAdmin):
     def save_formset(self, request, form, formset, change):
         """Handle saving of participation inline formset"""
         instances = formset.save(commit=False)
+        
+        # Handle new/updated instances
         for instance in instances:
-            instance.save()
+            # Avoid duplicate entries by using get_or_create
+            if hasattr(instance, 'event_score') and hasattr(instance, 'player'):
+                try:
+                    # Try to get existing participation record
+                    existing = TeamEventParticipation.objects.get(
+                        event_score=instance.event_score,
+                        player=instance.player
+                    )
+                    # Update existing record
+                    existing.participated = instance.participated
+                    existing.notes = instance.notes
+                    existing.save()
+                except TeamEventParticipation.DoesNotExist:
+                    # Create new record if it doesn't exist
+                    instance.save()
+            else:
+                instance.save()
+        
+        # Handle deletions
+        for obj in formset.deleted_objects:
+            obj.delete()
+        
+        # Handle many-to-many relationships
         formset.save_m2m()
         
         # Recalculate points if auto-calculation is enabled
