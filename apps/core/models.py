@@ -116,17 +116,31 @@ class PlayerAnswer(models.Model):
 
 
 class Event(models.Model):
-    """Events for team competitions"""
+    """Events for team and individual competitions"""
     EVENT_TYPES = [
         ('group_dance', 'Group Dance'),
         ('group_song', 'Group Song'),
+        ('individual_dance', 'Individual Dance'),
+        ('individual_song', 'Individual Song'),
+        ('individual_art', 'Individual Art'),
+        ('individual_quiz', 'Individual Quiz'),
+        ('individual_speech', 'Individual Speech'),
+    ]
+    
+    PARTICIPATION_TYPES = [
+        ('team', 'Team Event'),
+        ('individual', 'Individual Event'),
+        ('both', 'Both Team and Individual'),
     ]
     
     name = models.CharField(max_length=100)
     event_type = models.CharField(max_length=20, choices=EVENT_TYPES)
+    participation_type = models.CharField(max_length=20, choices=PARTICIPATION_TYPES, default='team')
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     voting_enabled = models.BooleanField(default=False)
+    individual_points_multiplier = models.DecimalField(max_digits=3, decimal_places=2, default=1.0, 
+                                                      help_text="Multiplier for individual points that go to team")
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -136,9 +150,24 @@ class Event(models.Model):
         return f"{self.name} ({self.get_event_type_display()})"
     
     @property
+    def allows_individual_participation(self):
+        """Check if event allows individual participation"""
+        return self.participation_type in ['individual', 'both']
+    
+    @property
+    def allows_team_participation(self):
+        """Check if event allows team participation"""
+        return self.participation_type in ['team', 'both']
+    
+    @property
     def participating_teams(self):
         """Get teams that are participating in this event"""
         return self.eventparticipation_set.values_list('team', flat=True)
+    
+    @property
+    def participating_players(self):
+        """Get players that are participating in this event individually"""
+        return self.individualparticipation_set.values_list('player', flat=True)
     
     @property
     def average_scores(self):
@@ -199,6 +228,105 @@ class EventParticipation(models.Model):
     
     def __str__(self):
         return f"{self.get_team_display()} - {self.event.name}"
+
+
+class IndividualParticipation(models.Model):
+    """Individual players participating in events"""
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    registered_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['event', 'player']
+    
+    def __str__(self):
+        return f"{self.player.name} - {self.event.name}"
+
+
+class IndividualEventScore(models.Model):
+    """Scores for individual players in events"""
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    points = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    team_points = models.DecimalField(max_digits=5, decimal_places=2, default=0, 
+                                     help_text="Points contributed to player's team")
+    notes = models.TextField(blank=True, help_text="Optional notes about the scoring")
+    awarded_by = models.CharField(max_length=100, help_text="Admin who awarded the points")
+    awarded_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['event', 'player']
+        ordering = ['-points', 'player__name']
+    
+    def save(self, *args, **kwargs):
+        """Automatically calculate team points based on multiplier"""
+        if self.event and self.points:
+            self.team_points = float(self.points) * float(self.event.individual_points_multiplier)
+        super().save(*args, **kwargs)
+        
+        # Update player's total score
+        if self.player:
+            self.update_player_score()
+    
+    def update_player_score(self):
+        """Update the player's total score from treasure hunt and individual events"""
+        from django.db.models import Sum
+        
+        # Get treasure hunt score
+        treasure_hunt_score = PlayerAnswer.objects.filter(
+            player=self.player, 
+            is_correct=True
+        ).aggregate(Sum('points_awarded'))['points_awarded__sum'] or 0
+        
+        # Get individual event scores
+        individual_event_score = IndividualEventScore.objects.filter(
+            player=self.player
+        ).aggregate(Sum('points'))['points__sum'] or 0
+        
+        # Update player's total score
+        self.player.score = treasure_hunt_score + float(individual_event_score)
+        self.player.save(update_fields=['score'])
+    
+    def __str__(self):
+        return f"{self.player.name} - {self.event.name}: {self.points} pts"
+
+
+class IndividualEventVote(models.Model):
+    """Votes for individual player performances"""
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    voting_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='votes_given')
+    performing_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='votes_received')
+    
+    # Scoring criteria (1-10 scale)
+    skill_score = models.PositiveIntegerField(help_text="Skill/Technique (1-10)")
+    creativity_score = models.PositiveIntegerField(help_text="Creativity/Originality (1-10)")
+    presentation_score = models.PositiveIntegerField(help_text="Presentation/Stage Presence (1-10)")
+    overall_score = models.PositiveIntegerField(help_text="Overall Performance (1-10)")
+    
+    comments = models.TextField(blank=True, help_text="Optional feedback")
+    voted_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['event', 'voting_player', 'performing_player']
+    
+    def __str__(self):
+        return f"{self.voting_player.name} votes for {self.performing_player.name} - {self.event.name}"
+    
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.voting_player == self.performing_player:
+            raise ValidationError("Players cannot vote for themselves")
+        # Prevent team members from voting for each other
+        if self.voting_player.team == self.performing_player.team and self.voting_player.team != 'unassigned':
+            raise ValidationError("Team members cannot vote for each other")
+    
+    @property
+    def total_score(self):
+        return self.skill_score + self.creativity_score + self.presentation_score + self.overall_score
+    
+    @property
+    def average_score(self):
+        return self.total_score / 4
 
 
 class EventVote(models.Model):
