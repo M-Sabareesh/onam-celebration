@@ -217,13 +217,13 @@ class LeaderboardView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from .models import Event, EventVote
-        from django.db.models import Avg, Count
+        from .models import Event, EventVote, IndividualEventScore
+        from django.db.models import Avg, Count, Sum
         
         # Get all players with their teams
         players = Player.objects.all()[:20]
         
-        # Calculate team scores including both treasure hunt and events
+        # Calculate team scores including treasure hunt, team events, and individual events
         team_data = {}
         team_choices_dict = dict(Player.TEAM_CHOICES)
         
@@ -235,20 +235,29 @@ class LeaderboardView(TemplateView):
                 'name': team_name,
                 'treasure_hunt_score': 0,
                 'event_scores': {},
+                'individual_event_score': 0,
                 'total_event_score': 0,
                 'total_score': 0,
                 'players': [],
                 'event_count': 0
             }
         
-        # Calculate treasure hunt scores
+        # Calculate treasure hunt scores and collect team players
         for player in Player.objects.all():
             team = player.team
             if team in team_data:
                 team_data[team]['treasure_hunt_score'] += player.score
                 team_data[team]['players'].append(player)
         
-        # Calculate event scores for each team
+        # Calculate individual event scores that contribute to team points
+        for team_code in team_data.keys():
+            team_players = Player.objects.filter(team=team_code)
+            individual_team_points = IndividualEventScore.objects.filter(
+                player__in=team_players
+            ).aggregate(Sum('team_points'))['team_points__sum'] or 0
+            team_data[team_code]['individual_event_score'] = float(individual_team_points)
+        
+        # Calculate team event scores for each team
         active_events = Event.objects.filter(is_active=True)
         
         for event in active_events:
@@ -263,11 +272,12 @@ class LeaderboardView(TemplateView):
                 else:
                     team_data[team_code]['event_scores'][event.name] = 0
         
-        # Calculate final total scores (treasure hunt + events)
+        # Calculate final total scores (treasure hunt + team events + individual event team points)
         for team_code in team_data.keys():
             team_data[team_code]['total_score'] = (
                 team_data[team_code]['treasure_hunt_score'] + 
-                team_data[team_code]['total_event_score']
+                team_data[team_code]['total_event_score'] +
+                team_data[team_code]['individual_event_score']
             )
         
         # Sort teams by total score
@@ -279,16 +289,21 @@ class LeaderboardView(TemplateView):
             event_info = {
                 'event': event,
                 'scores': event.average_scores,
-                'total_votes': EventVote.objects.filter(event=event).count()
+                'total_votes': EventVote.objects.filter(event=event).count(),
+                'individual_scores': IndividualEventScore.objects.filter(event=event).order_by('-points')[:5] if event.allows_individual_participation else []
             }
             event_details.append(event_info)
+        
+        # Get top individual performers across all events
+        top_individual_performers = IndividualEventScore.objects.select_related('player', 'event').order_by('-points')[:10]
         
         context.update({
             'page_title': 'Onam Aghosham - Complete Leaderboard',
             'players': players,
             'team_standings': sorted_teams,
             'events': event_details,
-            'team_choices': team_choices_dict
+            'team_choices': team_choices_dict,
+            'top_individual_performers': top_individual_performers
         })
         return context
 

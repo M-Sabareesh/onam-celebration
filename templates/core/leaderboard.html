@@ -57,6 +57,12 @@
                                                 <small class="text-muted">Treasure Hunt:</small>
                                                 <span class="badge bg-info float-end">{{ team_data.treasure_hunt_score }} pts</span>
                                             </div>
+                                            {% if team_data.individual_event_score > 0 %}
+                                            <div class="mb-1">
+                                                <small class="text-muted">Individual Events:</small>
+                                                <span class="badge bg-warning float-end">{{ team_data.individual_event_score|floatformat:1 }} pts</span>
+                                            </div>
+                                            {% endif %}
                                             {% if team_data.event_scores %}
                                                 {% for event_name, event_score in team_data.event_scores.items %}
                                                 <div class="mb-1">
@@ -116,12 +122,73 @@
                             {% endif %}
                             {% endfor %}
                         </div>
+                        {% if event_detail.individual_scores %}
+                        <div class="mt-3">
+                            <h6 class="text-info mb-2">
+                                <i class="fas fa-star me-1"></i>Top Individual Performers:
+                            </h6>
+                            <div class="row">
+                                {% for score in event_detail.individual_scores %}
+                                <div class="col-md-4 col-sm-6 mb-2">
+                                    <div class="card border-info">
+                                        <div class="card-body text-center py-2">
+                                            <h6 class="card-title mb-1">{{ score.player.name }}</h6>
+                                            <p class="card-text mb-1">
+                                                <span class="badge bg-info">{{ score.points|floatformat:1 }} pts</span>
+                                                <small class="text-muted d-block">{{ score.player.get_team_display }}</small>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
                         {% if event_detail.total_votes %}
                         <p class="text-muted mb-0"><small>Total votes received: {{ event_detail.total_votes }}</small></p>
                         {% endif %}
                     </div>
                     {% if not forloop.last %}<hr>{% endif %}
                     {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Top Individual Event Performers -->
+    {% if top_individual_performers %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-medal me-2"></i>
+                        Top Individual Event Performers
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for score in top_individual_performers %}
+                        <div class="col-md-4 col-lg-3 mb-3">
+                            <div class="card border-{% if forloop.counter == 1 %}warning{% elif forloop.counter == 2 %}secondary{% elif forloop.counter == 3 %}info{% else %}light{% endif %}">
+                                <div class="card-body text-center">
+                                    <div class="mb-2">
+                                        {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}.{% endif %}
+                                    </div>
+                                    <h6 class="card-title">{{ score.player.name }}</h6>
+                                    <p class="card-text">
+                                        <span class="badge bg-primary">{{ score.points|floatformat:1 }} pts</span>
+                                    </p>
+                                    <small class="text-muted">
+                                        {{ score.event.name }}<br>
+                                        Team: {{ score.player.get_team_display }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>

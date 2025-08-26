@@ -6,7 +6,8 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.utils.html import format_html
 from django.db.models import Q
-from .models import Player, GameSession, TreasureHuntQuestion, PlayerAnswer, Event, EventParticipation, EventVote, EventScore
+from .models import (Player, GameSession, TreasureHuntQuestion, PlayerAnswer, Event, EventParticipation, 
+                    EventVote, EventScore, IndividualParticipation, IndividualEventScore, IndividualEventVote)
 
 
 class CustomAdminSite(admin.AdminSite):
@@ -644,6 +645,114 @@ class EventScoreAdmin(admin.ModelAdmin):
         messages.success(request, f"Score awarded: {obj.points} points to {obj.get_team_display()} for {obj.event.name}")
 
 
+@admin.register(IndividualParticipation, site=admin_site)
+class IndividualParticipationAdmin(admin.ModelAdmin):
+    list_display = ['player', 'event', 'registered_at']
+    list_filter = ['event', 'player__team', 'registered_at']
+    search_fields = ['player__name', 'event__name']
+    ordering = ['-registered_at', 'event', 'player']
+    autocomplete_fields = ['player']
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # Filter events to only show those that allow individual participation
+        form.base_fields['event'].queryset = Event.objects.filter(
+            participation_type__in=['individual', 'both']
+        )
+        return form
+
+
+@admin.register(IndividualEventScore, site=admin_site)
+class IndividualEventScoreAdmin(admin.ModelAdmin):
+    list_display = ['player', 'event', 'points', 'team_points', 'awarded_by', 'awarded_at', 'notes_preview']
+    list_filter = ['event', 'player__team', 'awarded_at']
+    search_fields = ['player__name', 'event__name', 'notes', 'awarded_by']
+    ordering = ['-awarded_at', 'event', '-points']
+    readonly_fields = ['awarded_at', 'team_points']
+    autocomplete_fields = ['player']
+    
+    fieldsets = (
+        ('Score Information', {
+            'fields': ('event', 'player', 'points')
+        }),
+        ('Team Points', {
+            'fields': ('team_points',),
+            'description': 'Points automatically calculated for the player\'s team based on event multiplier'
+        }),
+        ('Additional Details', {
+            'fields': ('notes', 'awarded_by'),
+            'description': 'Optional notes about the scoring decision'
+        }),
+    )
+    
+    def notes_preview(self, obj):
+        if obj.notes:
+            return obj.notes[:50] + "..." if len(obj.notes) > 50 else obj.notes
+        return "No notes"
+    notes_preview.short_description = 'Notes'
+    
+    def save_model(self, request, obj, form, change):
+        if not obj.awarded_by:
+            obj.awarded_by = request.user.username
+        super().save_model(request, obj, form, change)
+        messages.success(request, f"Individual score awarded: {obj.points} points to {obj.player.name} for {obj.event.name} (Team gets {obj.team_points} points)")
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # Filter events to only show those that allow individual participation
+        form.base_fields['event'].queryset = Event.objects.filter(
+            participation_type__in=['individual', 'both']
+        )
+        return form
+
+
+@admin.register(IndividualEventVote, site=admin_site)
+class IndividualEventVoteAdmin(admin.ModelAdmin):
+    list_display = ['performing_player', 'event', 'voting_player', 'total_score', 'voted_at']
+    list_filter = ['event', 'performing_player__team', 'voting_player__team', 'voted_at']
+    search_fields = ['performing_player__name', 'voting_player__name', 'event__name']
+    ordering = ['-voted_at', 'event', '-skill_score']
+    autocomplete_fields = ['voting_player', 'performing_player']
+    readonly_fields = ['voted_at', 'total_score', 'average_score']
+    
+    fieldsets = (
+        ('Vote Information', {
+            'fields': ('event', 'voting_player', 'performing_player')
+        }),
+        ('Scoring (1-10 scale)', {
+            'fields': ('skill_score', 'creativity_score', 'presentation_score', 'overall_score'),
+            'description': 'Rate each category from 1 to 10'
+        }),
+        ('Calculated Scores', {
+            'fields': ('total_score', 'average_score'),
+            'description': 'Automatically calculated totals'
+        }),
+        ('Additional', {
+            'fields': ('comments',),
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        # Validate scores are between 1-10
+        score_fields = ['skill_score', 'creativity_score', 'presentation_score', 'overall_score']
+        for field in score_fields:
+            value = getattr(obj, field)
+            if value < 1 or value > 10:
+                messages.error(request, f"{field.replace('_', ' ').title()} must be between 1 and 10")
+                return
+        
+        super().save_model(request, obj, form, change)
+        messages.success(request, f"Vote saved successfully! Total score: {obj.total_score}/40")
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # Filter events to only show those that allow individual participation
+        form.base_fields['event'].queryset = Event.objects.filter(
+            participation_type__in=['individual', 'both']
+        )
+        return form
+
+
 # Register with default admin as well for compatibility
 admin.site.register(Player, PlayerAdmin)
 admin.site.register(GameSession, GameSessionAdmin)
@@ -653,3 +762,6 @@ admin.site.register(Event, EventAdmin)
 admin.site.register(EventParticipation, EventParticipationAdmin)
 admin.site.register(EventVote, EventVoteAdmin)
 admin.site.register(EventScore, EventScoreAdmin)
+admin.site.register(IndividualParticipation, IndividualParticipationAdmin)
+admin.site.register(IndividualEventScore, IndividualEventScoreAdmin)
+admin.site.register(IndividualEventVote, IndividualEventVoteAdmin)
