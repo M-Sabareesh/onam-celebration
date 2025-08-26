@@ -298,10 +298,10 @@ class IndividualEventVote(models.Model):
     performing_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='votes_received')
     
     # Scoring criteria (1-10 scale)
-    skill_score = models.PositiveIntegerField(help_text="Skill/Technique (1-10)")
-    creativity_score = models.PositiveIntegerField(help_text="Creativity/Originality (1-10)")
-    presentation_score = models.PositiveIntegerField(help_text="Presentation/Stage Presence (1-10)")
-    overall_score = models.PositiveIntegerField(help_text="Overall Performance (1-10)")
+    skill_score = models.PositiveIntegerField(null=True, blank=True, help_text="Skill/Technique (1-10)")
+    creativity_score = models.PositiveIntegerField(null=True, blank=True, help_text="Creativity/Originality (1-10)")
+    presentation_score = models.PositiveIntegerField(null=True, blank=True, help_text="Presentation/Stage Presence (1-10)")
+    overall_score = models.PositiveIntegerField(null=True, blank=True, help_text="Overall Performance (1-10)")
     
     comments = models.TextField(blank=True, help_text="Optional feedback")
     voted_at = models.DateTimeField(auto_now_add=True)
@@ -319,14 +319,29 @@ class IndividualEventVote(models.Model):
         # Prevent team members from voting for each other
         if self.voting_player.team == self.performing_player.team and self.voting_player.team != 'unassigned':
             raise ValidationError("Team members cannot vote for each other")
+        
+        # Ensure all scores are provided when saving
+        if self.pk:  # Only validate on save, not initial form load
+            score_fields = [self.skill_score, self.creativity_score, self.presentation_score, self.overall_score]
+            if any(score is None for score in score_fields):
+                raise ValidationError("All score fields must be provided")
+            if any(score < 1 or score > 10 for score in score_fields if score is not None):
+                raise ValidationError("All scores must be between 1 and 10")
     
     @property
     def total_score(self):
-        return self.skill_score + self.creativity_score + self.presentation_score + self.overall_score
+        scores = [
+            self.skill_score or 0,
+            self.creativity_score or 0, 
+            self.presentation_score or 0,
+            self.overall_score or 0
+        ]
+        return sum(scores)
     
     @property
     def average_score(self):
-        return self.total_score / 4
+        total = self.total_score
+        return total / 4 if total > 0 else 0
 
 
 class EventVote(models.Model):
@@ -377,6 +392,10 @@ class EventScore(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     team = models.CharField(max_length=20, choices=Player.TEAM_CHOICES)
     points = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    points_per_participant = models.DecimalField(max_digits=5, decimal_places=2, default=0, 
+                                               help_text="Points awarded per participating player")
+    auto_calculate_points = models.BooleanField(default=False, 
+                                              help_text="Automatically calculate total points based on participants")
     notes = models.TextField(blank=True, help_text="Optional notes about the scoring")
     awarded_by = models.CharField(max_length=100, help_text="Admin who awarded the points")
     awarded_at = models.DateTimeField(auto_now_add=True)
@@ -385,5 +404,54 @@ class EventScore(models.Model):
         unique_together = ['event', 'team']
         ordering = ['-points', 'team']
     
+    def save(self, *args, **kwargs):
+        """Auto-calculate points if enabled"""
+        if self.auto_calculate_points and self.points_per_participant > 0:
+            participant_count = self.get_participants().count()
+            self.points = self.points_per_participant * participant_count
+        super().save(*args, **kwargs)
+    
+    def get_participants(self):
+        """Get players who participated in this team event"""
+        return TeamEventParticipation.objects.filter(
+            event_score=self,
+            participated=True
+        ).select_related('player')
+    
+    @property
+    def participant_count(self):
+        """Get number of participating players"""
+        return self.get_participants().count()
+    
+    @property 
+    def participating_players(self):
+        """Get list of participating player names"""
+        return [p.player.name for p in self.get_participants()]
+    
     def __str__(self):
         return f"{self.get_team_display()} - {self.event.name}: {self.points} pts"
+
+
+class TeamEventParticipation(models.Model):
+    """Track individual player participation in team events"""
+    event_score = models.ForeignKey(EventScore, on_delete=models.CASCADE, related_name='participations')
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    participated = models.BooleanField(default=False, help_text="Did this player participate?")
+    notes = models.TextField(blank=True, help_text="Optional notes about participation")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['event_score', 'player']
+        ordering = ['player__name']
+    
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        # Ensure player is from the same team as the event score
+        if self.player.team != self.event_score.team:
+            raise ValidationError(f"Player {self.player.name} is not from {self.event_score.get_team_display()}")
+    
+    def __str__(self):
+        status = "✓" if self.participated else "✗"
+        return f"{status} {self.player.name} - {self.event_score.event.name}"
+

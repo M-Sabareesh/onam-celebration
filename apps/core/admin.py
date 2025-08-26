@@ -7,7 +7,8 @@ from django.http import JsonResponse
 from django.utils.html import format_html
 from django.db.models import Q
 from .models import (Player, GameSession, TreasureHuntQuestion, PlayerAnswer, Event, EventParticipation, 
-                    EventVote, EventScore, IndividualParticipation, IndividualEventScore, IndividualEventVote)
+                    EventVote, EventScore, IndividualParticipation, IndividualEventScore, IndividualEventVote,
+                    TeamEventParticipation)
 
 
 class CustomAdminSite(admin.AdminSite):
@@ -614,17 +615,54 @@ class EventVoteAdmin(admin.ModelAdmin):
         messages.success(request, f"Vote saved successfully! Total score: {obj.total_score}/40")
 
 
+class TeamEventParticipationInline(admin.TabularInline):
+    """Inline admin for team event participant selection"""
+    model = TeamEventParticipation
+    extra = 0
+    fields = ['player', 'participated', 'notes']
+    readonly_fields = []
+    
+    def get_queryset(self, request):
+        """Filter to show only players from the same team as the event score"""
+        qs = super().get_queryset(request)
+        return qs.select_related('player')
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Filter players based on the team selected in parent EventScore"""
+        if db_field.name == "player":
+            # Get the team from the parent object if we're editing
+            parent_obj_id = request.resolver_match.kwargs.get('object_id')
+            if parent_obj_id:
+                try:
+                    event_score = EventScore.objects.get(id=parent_obj_id)
+                    kwargs["queryset"] = Player.objects.filter(
+                        team=event_score.team, 
+                        is_active=True
+                    ).order_by('name')
+                except EventScore.DoesNotExist:
+                    kwargs["queryset"] = Player.objects.none()
+            else:
+                # For new objects, show all active players (will be filtered by JS if possible)
+                kwargs["queryset"] = Player.objects.filter(is_active=True).order_by('name')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
 @admin.register(EventScore, site=admin_site)
 class EventScoreAdmin(admin.ModelAdmin):
-    list_display = ['event', 'team', 'points', 'awarded_by', 'awarded_at', 'notes_preview']
-    list_filter = ['event', 'team', 'awarded_at']
+    list_display = ['event', 'team', 'points', 'participant_count', 'auto_calculate_points', 'awarded_by', 'awarded_at']
+    list_filter = ['event', 'team', 'auto_calculate_points', 'awarded_at']
     search_fields = ['event__name', 'notes', 'awarded_by']
     ordering = ['-awarded_at', 'event', '-points']
-    readonly_fields = ['awarded_at']
+    readonly_fields = ['awarded_at', 'participant_count']
+    inlines = [TeamEventParticipationInline]
     
     fieldsets = (
         ('Score Information', {
-            'fields': ('event', 'team', 'points')
+            'fields': ('event', 'team')
+        }),
+        ('Point Calculation', {
+            'fields': ('auto_calculate_points', 'points_per_participant', 'points', 'participant_count'),
+            'description': 'Choose manual points OR auto-calculation based on participants'
         }),
         ('Additional Details', {
             'fields': ('notes', 'awarded_by'),
@@ -632,17 +670,67 @@ class EventScoreAdmin(admin.ModelAdmin):
         }),
     )
     
-    def notes_preview(self, obj):
-        if obj.notes:
-            return obj.notes[:50] + "..." if len(obj.notes) > 50 else obj.notes
-        return "No notes"
-    notes_preview.short_description = 'Notes'
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # Filter events to only show team events
+        form.base_fields['event'].queryset = Event.objects.filter(
+            participation_type__in=['team', 'both']
+        )
+        return form
     
     def save_model(self, request, obj, form, change):
         if not obj.awarded_by:
             obj.awarded_by = request.user.username
         super().save_model(request, obj, form, change)
-        messages.success(request, f"Score awarded: {obj.points} points to {obj.get_team_display()} for {obj.event.name}")
+        
+        # Auto-create participation records for team members if they don't exist
+        if obj.team != 'unassigned':
+            team_players = Player.objects.filter(team=obj.team, is_active=True)
+            for player in team_players:
+                TeamEventParticipation.objects.get_or_create(
+                    event_score=obj,
+                    player=player,
+                    defaults={'participated': False}
+                )
+        
+        calc_type = "auto-calculated" if obj.auto_calculate_points else "manual"
+        participant_info = f" ({obj.participant_count} participants)" if obj.auto_calculate_points else ""
+        messages.success(
+            request, 
+            f"Score {calc_type}: {obj.points} points to {obj.get_team_display()} for {obj.event.name}{participant_info}"
+        )
+    
+    def save_formset(self, request, form, formset, change):
+        """Handle saving of participation inline formset"""
+        instances = formset.save(commit=False)
+        for instance in instances:
+            instance.save()
+        formset.save_m2m()
+        
+        # Recalculate points if auto-calculation is enabled
+        if form.instance.auto_calculate_points:
+            form.instance.save()  # This will trigger the auto-calculation
+
+    class Media:
+        js = ('js/admin_event_score.js',)  # Optional JS for enhanced UX
+
+
+@admin.register(TeamEventParticipation, site=admin_site)
+class TeamEventParticipationAdmin(admin.ModelAdmin):
+    list_display = ['event_score', 'player', 'participated', 'created_at']
+    list_filter = ['participated', 'event_score__event', 'player__team', 'created_at']
+    search_fields = ['player__name', 'event_score__event__name']
+    ordering = ['-created_at', 'event_score', 'player__name']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Participation Info', {
+            'fields': ('event_score', 'player', 'participated')
+        }),
+        ('Additional', {
+            'fields': ('notes', 'created_at', 'updated_at')
+        }),
+    )
 
 
 @admin.register(IndividualParticipation, site=admin_site)
@@ -708,12 +796,12 @@ class IndividualEventScoreAdmin(admin.ModelAdmin):
 
 @admin.register(IndividualEventVote, site=admin_site)
 class IndividualEventVoteAdmin(admin.ModelAdmin):
-    list_display = ['performing_player', 'event', 'voting_player', 'total_score', 'voted_at']
+    list_display = ['performing_player', 'event', 'voting_player', 'get_total_score', 'voted_at']
     list_filter = ['event', 'performing_player__team', 'voting_player__team', 'voted_at']
     search_fields = ['performing_player__name', 'voting_player__name', 'event__name']
     ordering = ['-voted_at', 'event', '-skill_score']
     autocomplete_fields = ['voting_player', 'performing_player']
-    readonly_fields = ['voted_at', 'total_score', 'average_score']
+    readonly_fields = ['voted_at']
     
     fieldsets = (
         ('Vote Information', {
@@ -723,26 +811,30 @@ class IndividualEventVoteAdmin(admin.ModelAdmin):
             'fields': ('skill_score', 'creativity_score', 'presentation_score', 'overall_score'),
             'description': 'Rate each category from 1 to 10'
         }),
-        ('Calculated Scores', {
-            'fields': ('total_score', 'average_score'),
-            'description': 'Automatically calculated totals'
-        }),
         ('Additional', {
             'fields': ('comments',),
         }),
     )
     
+    def get_total_score(self, obj):
+        """Get total score safely for display"""
+        if obj and obj.pk:
+            return f"{obj.total_score}/40"
+        return "Not calculated yet"
+    get_total_score.short_description = 'Total Score'
+    
     def save_model(self, request, obj, form, change):
-        # Validate scores are between 1-10
+        # Validate scores are between 1-10 (only if they have values)
         score_fields = ['skill_score', 'creativity_score', 'presentation_score', 'overall_score']
         for field in score_fields:
             value = getattr(obj, field)
-            if value < 1 or value > 10:
+            if value is not None and (value < 1 or value > 10):
                 messages.error(request, f"{field.replace('_', ' ').title()} must be between 1 and 10")
                 return
         
         super().save_model(request, obj, form, change)
-        messages.success(request, f"Vote saved successfully! Total score: {obj.total_score}/40")
+        if obj.pk:  # Only show success message if object was actually saved
+            messages.success(request, f"Vote saved successfully! Total score: {obj.total_score}/40")
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -762,6 +854,7 @@ admin.site.register(Event, EventAdmin)
 admin.site.register(EventParticipation, EventParticipationAdmin)
 admin.site.register(EventVote, EventVoteAdmin)
 admin.site.register(EventScore, EventScoreAdmin)
+admin.site.register(TeamEventParticipation, TeamEventParticipationAdmin)
 admin.site.register(IndividualParticipation, IndividualParticipationAdmin)
 admin.site.register(IndividualEventScore, IndividualEventScoreAdmin)
 admin.site.register(IndividualEventVote, IndividualEventVoteAdmin)
