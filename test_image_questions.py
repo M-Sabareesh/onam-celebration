@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Test script for the new Image Question Type feature in Onam Aghosham - Thantha Vibe
+Test script for the new Image Question Type feature in ഓണാഘോഷം
 """
 import os
 import sys
@@ -103,7 +103,7 @@ def test_image_question_type():
     print("- 'What type of Pookalam pattern is this?'")
     print("- 'Which Kerala art form is depicted here?'")
     
-    print("\nYour Onam Aghosham - Thantha Vibe treasure hunt now supports visual questions!")
+    print("\nYour ഓണാഘോഷം treasure hunt now supports visual questions!")
     print("ഓണാശംസകൾ! 🌺👑🌸")
     
     return True

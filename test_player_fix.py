@@ -58,7 +58,7 @@ def test_player_name_fix():
     print("✅ Admin approval: Changed player.get_name_display() to player.name")
     print("✅ Admin rejection: Changed answer.player.get_name_display() to answer.player.name")
     
-    print("\nYour Onam Aghosham - Thantha Vibe application should now work without errors!")
+    print("\nYour ഓണാഘോഷം application should now work without errors!")
     print("Try accessing: http://localhost:8000/treasure-hunt/")
     
     return True

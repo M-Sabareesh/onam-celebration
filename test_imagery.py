@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Test script to verify Onam Aghosham - Thantha Vibe with Mahabali imagery
+Test script to verify ഓണാഘോഷം with Mahabali imagery
 """
 import os
 import sys
@@ -16,7 +16,7 @@ django.setup()
 
 def test_branding_and_imagery():
     """Test the new branding and Mahabali/Maveli imagery"""
-    print("=== Onam Aghosham - Thantha Vibe Test ===")
+    print("=== ഓണാഘോഷം Test ===")
     print("Testing new branding and Mahabali/Maveli imagery...")
     
     # Test Django
@@ -68,7 +68,7 @@ def test_branding_and_imagery():
     
     # Test branding elements
     print("✅ Branding elements implemented:")
-    print("   - Site name: 'Onam Aghosham - Thantha Vibe'")
+    print("   - Site name: 'ഓണാഘോഷം'")
     print("   - Mahabali/Maveli imagery in homepage")
     print("   - Enhanced footer with King Mahabali image")
     print("   - Improved about page with Maveli story")
@@ -86,10 +86,10 @@ def test_branding_and_imagery():
     print("   - Online status tracking")
     
     print("\n🎉 All branding and imagery tests passed!")
-    print("\n🌺 Onam Aghosham - Thantha Vibe is ready! 🌺")
+    print("\n🌺 ഓണാഘോഷം is ready! 🌺")
     print("King Mahabali's blessings are with your application!")
     print("\nFeatures implemented:")
-    print("✅ Changed name to 'Onam Aghosham - Thantha Vibe'")
+    print("✅ Changed name to 'ഓണാഘോഷം'")
     print("✅ Added Mahabali/Maveli images throughout the website")
     print("✅ Enhanced homepage with King Mahabali story")
     print("✅ Beautiful footer with Mahabali imagery")
