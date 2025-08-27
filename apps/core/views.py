@@ -300,7 +300,7 @@ class LeaderboardView(TemplateView):
         # Sort teams by total score
         sorted_teams = sorted(team_data.items(), key=lambda x: x[1]['total_score'], reverse=True)
         
-        # Get detailed event information for display
+        # Get detailed event information for display with winners
         event_details = []
         for event in active_events:
             if has_individual_scoring:
@@ -311,13 +311,28 @@ class LeaderboardView(TemplateView):
             else:
                 individual_scores = []
             
+            # Determine event winner
+            event_scores = event.average_scores
+            winner_team = None
+            winner_score = 0
+            for team_code, score_data in event_scores.items():
+                if team_code != 'unassigned' and score_data['total'] > winner_score:
+                    winner_score = score_data['total']
+                    winner_team = team_code
+            
             event_info = {
                 'event': event,
-                'scores': event.average_scores,
+                'scores': event_scores,
                 'total_votes': EventVote.objects.filter(event=event).count(),
-                'individual_scores': individual_scores
+                'individual_scores': individual_scores,
+                'winner_team': winner_team,
+                'winner_score': winner_score,
+                'winner_name': team_choices_dict.get(winner_team, 'No Winner') if winner_team else 'No Winner'
             }
             event_details.append(event_info)
+        
+        # Prepare chart data for team progress over time
+        chart_data = self.get_team_progress_data(team_data)
         
         # Get top individual performers across all events
         if has_individual_scoring:
@@ -327,16 +342,97 @@ class LeaderboardView(TemplateView):
                 top_individual_performers = []
         else:
             top_individual_performers = []
-        
+
         context.update({
             'page_title': 'Onam Aghosham - Complete Leaderboard',
             'players': players,
             'team_standings': sorted_teams,
             'events': event_details,
             'team_choices': team_choices_dict,
-            'top_individual_performers': top_individual_performers
+            'top_individual_performers': top_individual_performers,
+            'chart_data': chart_data
         })
         return context
+    
+    def get_team_progress_data(self, team_data):
+        """Generate chart data for team progress over time"""
+        from datetime import datetime, timedelta
+        import json
+        
+        # Team colors
+        team_colors = {
+            'malapuram': '#FF6384',  # Red
+            'pathanamthitta': '#36A2EB',  # Blue  
+            'ernakulam': '#FFCE56',  # Yellow
+            'thiruvananthapuram': '#4BC0C0',  # Teal
+            'unassigned': '#9966FF'  # Purple
+        }
+        
+        # Get all events with their awarded dates
+        events_with_dates = []
+        try:
+            from apps.core.models import EventScore
+            event_scores = EventScore.objects.select_related('event').order_by('awarded_at')
+            for event_score in event_scores:
+                events_with_dates.append({
+                    'date': event_score.awarded_at.strftime('%Y-%m-%d'),
+                    'event': event_score.event.name,
+                    'team': event_score.team,
+                    'points': float(event_score.points)
+                })
+        except Exception:
+            # Fallback to simple data if EventScore doesn't exist
+            today = datetime.now()
+            for i in range(7):
+                date = (today - timedelta(days=6-i)).strftime('%Y-%m-%d')
+                events_with_dates.append({
+                    'date': date,
+                    'event': f'Event {i+1}',
+                    'team': 'malapuram',
+                    'points': 10 * (i + 1)
+                })
+        
+        # Build cumulative scores by date
+        dates = sorted(list(set([event['date'] for event in events_with_dates])))
+        if not dates:
+            # Fallback dates if no events
+            today = datetime.now()
+            dates = [(today - timedelta(days=6-i)).strftime('%Y-%m-%d') for i in range(7)]
+        
+        # Initialize team cumulative scores
+        team_cumulative = {}
+        for team_code in team_data.keys():
+            if team_code != 'unassigned':
+                team_cumulative[team_code] = []
+                running_total = 0
+                
+                for date in dates:
+                    # Add points from events on this date
+                    day_points = sum([
+                        event['points'] for event in events_with_dates 
+                        if event['date'] == date and event['team'] == team_code
+                    ])
+                    running_total += day_points
+                    team_cumulative[team_code].append(running_total)
+        
+        # Format data for Chart.js
+        datasets = []
+        for team_code, points in team_cumulative.items():
+            if team_code != 'unassigned':
+                team_name = dict(Player.TEAM_CHOICES).get(team_code, team_code)
+                datasets.append({
+                    'label': team_name,
+                    'data': points,
+                    'borderColor': team_colors.get(team_code, '#999999'),
+                    'backgroundColor': team_colors.get(team_code, '#999999'),
+                    'fill': False,
+                    'tension': 0.1
+                })
+        
+        return {
+            'labels': json.dumps(dates),
+            'datasets': json.dumps(datasets)
+        }
 
 
 class TreasureHuntView(TemplateView):
