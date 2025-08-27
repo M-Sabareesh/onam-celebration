@@ -1,7 +1,27 @@
 /* Leaderboard Chart Enhancements */
 
 function initTeamProgressChart(chartData) {
+    console.log('🎨 Chart Data Received:', chartData);
+    console.log('📊 Datasets:', chartData.datasets);
+    
+    // Check if each dataset has colors
+    if (chartData.datasets && Array.isArray(chartData.datasets)) {
+        chartData.datasets.forEach((dataset, index) => {
+            console.log(`🎯 Team ${index + 1} (${dataset.label}):`, {
+                borderColor: dataset.borderColor,
+                backgroundColor: dataset.backgroundColor
+            });
+        });
+    }
+    
     const ctx = document.getElementById('teamProgressChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: chartData.datasets
+        },
     
     new Chart(ctx, {
         type: 'line',

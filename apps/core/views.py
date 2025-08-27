@@ -360,20 +360,20 @@ class LeaderboardView(TemplateView):
         
         # Enhanced team colors - more distinct and vibrant with high contrast
         team_colors = {
-            'malapuram': '#E53E3E',        # Bright Red
-            'pathanamthitta': '#3182CE',   # Blue  
-            'ernakulam': '#D69E2E',        # Golden Orange
-            'thiruvananthapuram': '#38A169', # Green
-            'unassigned': '#805AD5'        # Purple
+            'team_1': '#E53E3E',        # Bright Red
+            'team_2': '#3182CE',        # Blue  
+            'team_3': '#D69E2E',        # Golden Orange
+            'team_4': '#38A169',        # Green
+            'unassigned': '#805AD5'     # Purple
         }
         
         # Secondary colors for borders/highlights
         team_border_colors = {
-            'malapuram': '#C53030',        # Darker Red
-            'pathanamthitta': '#2C5282',   # Darker Blue  
-            'ernakulam': '#B7791F',        # Darker Orange
-            'thiruvananthapuram': '#2F855A', # Darker Green
-            'unassigned': '#6B46C1'        # Darker Purple
+            'team_1': '#C53030',        # Darker Red
+            'team_2': '#2C5282',        # Darker Blue  
+            'team_3': '#B7791F',        # Darker Orange
+            'team_4': '#2F855A',        # Darker Green
+            'unassigned': '#6B46C1'     # Darker Purple
         }
         
         # Get all active events in order
@@ -392,9 +392,16 @@ class LeaderboardView(TemplateView):
         
         # Build team scores for each event
         datasets = []
+        
         for team_code, team_info in team_data.items():
             if team_code != 'unassigned':
-                team_name = dict(Player.TEAM_CHOICES).get(team_code, team_code)
+                # Get team name from TeamConfiguration if available, otherwise use fallback
+                try:
+                    from .models import TeamConfiguration
+                    team_name = TeamConfiguration.get_team_name(team_code)
+                except:
+                    team_name = dict(Player.TEAM_CHOICES).get(team_code, team_code)
+                
                 team_scores = []
                 
                 # Get cumulative scores for each event (running total)
@@ -415,7 +422,8 @@ class LeaderboardView(TemplateView):
                         score = base_score + (increment * (i + 1)) + random.randint(-5, 10)
                         team_scores.append(max(0, score))
                 
-                datasets.append({
+                # Create the dataset with explicit color assignment
+                dataset = {
                     'label': team_name,
                     'data': team_scores,
                     'borderColor': team_border_colors.get(team_code, '#999999'),
@@ -431,7 +439,9 @@ class LeaderboardView(TemplateView):
                     'pointHoverBackgroundColor': team_border_colors.get(team_code, '#999999'),
                     'pointHoverBorderColor': '#FFFFFF',
                     'pointHoverBorderWidth': 4
-                })
+                }
+                
+                datasets.append(dataset)
         
         return {
             'labels': json.dumps(event_names),
@@ -441,7 +451,7 @@ class LeaderboardView(TemplateView):
 
 class TreasureHuntView(TemplateView):
     """
-    Treasure hunt questions view.
+    Chodya Onam questions view.
     """
     template_name = 'core/treasure_hunt.html'
     
@@ -468,7 +478,7 @@ class TreasureHuntView(TemplateView):
             player_answers[answer.question_id] = answer
         
         context.update({
-            'page_title': f'{player.name} - Treasure Hunt',
+            'page_title': f'{player.name} - Chodya Onam',
             'player': player,
             'questions': questions,
             'answered_question_ids': answered_question_ids,

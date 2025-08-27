@@ -8,7 +8,50 @@ from django.utils.html import format_html
 from django.db.models import Q
 from .models import (Player, GameSession, TreasureHuntQuestion, PlayerAnswer, Event, EventParticipation, 
                     EventVote, EventScore, IndividualParticipation, IndividualEventScore, IndividualEventVote,
-                    TeamEventParticipation)
+                    TeamEventParticipation, TeamConfiguration)
+
+
+# Team Configuration Admin
+@admin.register(TeamConfiguration)
+class TeamConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('team_code', 'team_name', 'is_active', 'updated_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('team_code', 'team_name')
+    readonly_fields = ('team_code', 'created_at', 'updated_at')
+    
+    def has_add_permission(self, request):
+        # Prevent adding new teams through admin to avoid breaking existing data
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        # Prevent deleting teams to avoid breaking existing data
+        return False
+    
+    def get_queryset(self, request):
+        # Show all teams, create missing ones if needed
+        qs = super().get_queryset(request)
+        self.ensure_default_teams_exist()
+        return qs
+    
+    def ensure_default_teams_exist(self):
+        """Ensure all default teams exist in TeamConfiguration"""
+        default_teams = [
+            ('team_1', 'Team 1'),
+            ('team_2', 'Team 2'),
+            ('team_3', 'Team 3'),
+            ('team_4', 'Team 4'),
+            ('unassigned', 'Unassigned'),
+        ]
+        
+        for team_code, team_name in default_teams:
+            TeamConfiguration.objects.get_or_create(
+                team_code=team_code,
+                defaults={'team_name': team_name, 'is_active': True}
+            )
+    
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        messages.success(request, f"Team '{obj.team_name}' updated successfully! Changes will appear throughout the site.")
 
 
 class CustomAdminSite(admin.AdminSite):
@@ -310,11 +353,16 @@ admin_site = CustomAdminSite(name='custom_admin')
 
 @admin.register(Player, site=admin_site)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ['name', 'team', 'get_online_status', 'score', 'current_level', 'is_active', 'created_at']
+    list_display = ['name', 'get_team_display_name', 'get_online_status', 'score', 'current_level', 'is_active', 'created_at']
     list_filter = ['team', 'is_active', 'is_online', 'has_completed_hunt', 'created_at']
     search_fields = ['name']
     readonly_fields = ['created_at', 'last_activity', 'session_key']
     actions = ['activate_players', 'deactivate_players', 'reset_scores', 'assign_to_team_1', 'assign_to_team_2', 'assign_to_team_3', 'assign_to_team_4']
+    
+    def get_team_display_name(self, obj):
+        """Show custom team name from TeamConfiguration"""
+        return obj.get_team_display()
+    get_team_display_name.short_description = 'Team'
     
     def get_online_status(self, obj):
         if obj.is_online:

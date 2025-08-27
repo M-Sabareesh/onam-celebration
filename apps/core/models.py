@@ -1,11 +1,49 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+# Team Configuration Model for Admin Management
+class TeamConfiguration(models.Model):
+    """Model to manage team names from admin panel"""
+    team_code = models.CharField(max_length=20, unique=True, help_text="Internal team code (don't change)")
+    team_name = models.CharField(max_length=100, help_text="Display name for the team")
+    is_active = models.BooleanField(default=True, help_text="Whether this team is active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['team_code']
+        verbose_name = "Team Configuration"
+        verbose_name_plural = "Team Configurations"
+    
+    def __str__(self):
+        return f"{self.team_code}: {self.team_name}"
+    
+    @classmethod
+    def get_team_choices(cls):
+        """Get team choices for use in other models"""
+        active_teams = cls.objects.filter(is_active=True).order_by('team_code')
+        choices = [(team.team_code, team.team_name) for team in active_teams]
+        # Always include unassigned
+        if not any(choice[0] == 'unassigned' for choice in choices):
+            choices.append(('unassigned', 'Unassigned'))
+        return choices
+    
+    @classmethod
+    def get_team_name(cls, team_code):
+        """Get team name by code"""
+        try:
+            team = cls.objects.get(team_code=team_code, is_active=True)
+            return team.team_name
+        except cls.DoesNotExist:
+            # Fallback to original choices
+            team_choices = dict(Player.TEAM_CHOICES)
+            return team_choices.get(team_code, team_code)
+
 # Simple name selection model for Onam celebration
 class Player(models.Model):
     """Enhanced player model that allows manual name entry"""
     
-    # Teams for admin assignment
+    # Teams for admin assignment (fallback if TeamConfiguration not available)
     TEAM_CHOICES = [
         ('team_1', 'Team 1'),
         ('team_2', 'Team 2'),
@@ -30,6 +68,14 @@ class Player(models.Model):
         
     def __str__(self):
         return self.name
+    
+    def get_team_display(self):
+        """Get team display name from TeamConfiguration if available"""
+        try:
+            return TeamConfiguration.get_team_name(self.team)
+        except:
+            # Fallback to original choices
+            return dict(self.TEAM_CHOICES).get(self.team, self.team)
     
     @property
     def teammates(self):
