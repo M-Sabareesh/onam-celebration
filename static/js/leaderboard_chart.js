@@ -16,12 +16,12 @@ function initTeamProgressChart(chartData) {
     
     const ctx = document.getElementById('teamProgressChart').getContext('2d');
     
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartData.labels,
-            datasets: chartData.datasets
-        },
+    // Check if data is available
+    if (!chartData || !chartData.datasets || chartData.datasets.length === 0) {
+        console.warn('⚠️ No chart data available');
+        document.getElementById('teamProgressChart').style.display = 'none';
+        return;
+    }
     
     new Chart(ctx, {
         type: 'line',
