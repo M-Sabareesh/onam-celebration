@@ -81,35 +81,35 @@ python manage.py collectstatic --noinput
 
 ### Team Name Management (After Fix)
 
-Once your site is working, you can manage team names:
+Once your site is working, you have **simple and clear team management**:
 
-#### Access Admin Panel
+#### 🏆 Access Team Management
 1. Go to: `https://your-site.com/admin/`
-2. Login with superuser credentials:
-   - Username: `OnamAdmin` (or from environment variable)
-   - Password: Your `DJANGO_SUPERUSER_PASSWORD`
+2. Login with superuser credentials
+3. Look for **"CORE"** section  
+4. Click **"Team configurations"** ← This is your Team table!
 
-#### Change Team Names
-1. Navigate to: **Core > Team configurations**
-2. Click on any team to edit
-3. Change the **Team name** field:
-   - `team_1` → "Red Warriors" or "Maveli Team"
-   - `team_2` → "Blue Champions" or "Bhima Sena"
-   - `team_3` → "Green Masters" or "Vamana Squad"
-   - `team_4` → "Yellow Legends" or "Parashurama Force"
-4. Save changes
-5. Team names update instantly on:
-   - Leaderboard
-   - Charts
-   - Player dashboard
-   - All site pages
+#### ✏️ Change Team Names (Super Simple)
+1. **Click on any team** (e.g., "team_1: Team 1")
+2. **Edit the "Team name" field**:
+   - "Team 1" → "Red Warriors" 
+   - "Team 2" → "Blue Champions"
+   - "Team 3" → "Maveli Squad"
+   - "Team 4" → "Onam Heroes"
+3. **Click "Save"**
+4. **Done!** New name appears instantly everywhere
 
-#### Team Management Features
-- ✅ **Edit team names** - Change display names anytime
-- ✅ **Activate/deactivate teams** - Control which teams are active
-- ✅ **Instant updates** - Changes appear site-wide immediately
-- ✅ **Preserve data** - Player assignments and scores remain intact
-- ✅ **Chart colors** - Distinct colors for each team maintained
+#### 🎨 What You Get
+- ✅ **Simple table** showing all teams
+- ✅ **Player count** for each team
+- ✅ **Easy editing** - just click and change names
+- ✅ **Instant updates** - no restart needed
+- ✅ **Site-wide changes** - leaderboard, charts, everything updates
+
+#### 📝 Note About "Team Event Participations"
+- This is a **different, advanced feature** for tracking individual players in team events
+- **You don't need it** for basic team name management
+- **"Team configurations"** is what you want for changing team names
 
 ### Chart Features (After Fix)
 

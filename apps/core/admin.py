@@ -11,21 +11,20 @@ from .models import (Player, GameSession, TreasureHuntQuestion, PlayerAnswer, Ev
                     TeamEventParticipation, TeamConfiguration)
 
 
-# Team Configuration Admin
+# Enhanced Team Management Admin
 @admin.register(TeamConfiguration)
 class TeamConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('team_code', 'team_name', 'is_active', 'updated_at')
+    """
+    Simple and clear Team Management interface for admins.
+    Use this to change team names that appear throughout the site.
+    """
+    list_display = ('team_code', 'team_name', 'player_count', 'is_active', 'updated_at')
     list_filter = ('is_active', 'created_at')
     search_fields = ('team_code', 'team_name')
-    readonly_fields = ('team_code', 'created_at', 'updated_at')
+    readonly_fields = ('team_code', 'created_at', 'updated_at', 'player_count_display')
     
-    def has_add_permission(self, request):
-        # Prevent adding new teams through admin to avoid breaking existing data
-        return False
-    
-    def has_delete_permission(self, request, obj=None):
-        # Prevent deleting teams to avoid breaking existing data
-        return False
+    # Make the form cleaner and more focused
+    fields = ('team_code', 'team_name', 'is_active', 'player_count_display', 'created_at', 'updated_at')
     
     def get_queryset(self, request):
         # Show all teams, create missing ones if needed
@@ -33,11 +32,26 @@ class TeamConfigurationAdmin(admin.ModelAdmin):
         self.ensure_default_teams_exist()
         return qs
     
+    def player_count(self, obj):
+        """Show number of players in this team"""
+        from .models import Player
+        count = Player.objects.filter(team=obj.team_code, is_active=True).count()
+        return f"{count} players"
+    player_count.short_description = "Active Players"
+    
+    def player_count_display(self, obj):
+        """Detailed player count for form"""
+        from .models import Player
+        total = Player.objects.filter(team=obj.team_code).count()
+        active = Player.objects.filter(team=obj.team_code, is_active=True).count()
+        return f"{active} active players ({total} total)"
+    player_count_display.short_description = "Player Statistics"
+    
     def ensure_default_teams_exist(self):
         """Ensure all default teams exist in TeamConfiguration"""
         default_teams = [
             ('team_1', 'Team 1'),
-            ('team_2', 'Team 2'),
+            ('team_2', 'Team 2'), 
             ('team_3', 'Team 3'),
             ('team_4', 'Team 4'),
             ('unassigned', 'Unassigned'),
@@ -49,9 +63,45 @@ class TeamConfigurationAdmin(admin.ModelAdmin):
                 defaults={'team_name': team_name, 'is_active': True}
             )
     
+    def has_add_permission(self, request):
+        # Prevent adding new teams through admin to avoid breaking existing data
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        # Prevent deleting teams to avoid breaking existing data
+        return False
+    
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        messages.success(request, f"Team '{obj.team_name}' updated successfully! Changes will appear throughout the site.")
+        messages.success(request, f"✅ Team '{obj.team_name}' updated successfully! The new name will appear throughout the site immediately.")
+    
+    # Add helpful text to the admin
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['title'] = '🏆 Team Management - Change Team Names'
+        extra_context['help_text'] = """
+        <div style="background: #e8f4f8; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+            <h3>🎯 How to Change Team Names:</h3>
+            <ol>
+                <li><strong>Click on any team</strong> to edit its name</li>
+                <li><strong>Change the "Team name" field</strong> (e.g., "Team 1" → "Red Warriors")</li>
+                <li><strong>Save the changes</strong></li>
+                <li><strong>New name appears instantly</strong> on leaderboard, charts, and all pages</li>
+            </ol>
+            <p><strong>Note:</strong> Don't change the "Team code" - it's used internally. Only change the "Team name".</p>
+        </div>
+        """
+        return super().changelist_view(request, extra_context=extra_context)
+    
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['help_text'] = """
+        <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+            <strong>💡 Tip:</strong> Change the "Team name" to whatever you want (e.g., "Red Warriors", "Blue Champions", "Maveli Team"). 
+            This name will appear on the leaderboard, charts, and throughout the site.
+        </div>
+        """
+        return super().change_view(request, object_id, form_url, extra_context)
 
 
 class CustomAdminSite(admin.AdminSite):
@@ -787,7 +837,9 @@ class EventScoreAdmin(admin.ModelAdmin):
         js = ('js/admin_event_score.js',)  # Optional JS for enhanced UX
 
 
-@admin.register(TeamEventParticipation, site=admin_site)
+# Hide TeamEventParticipation from main admin - it's for advanced event management only
+# Uncomment the line below if you need to manage individual team event participation
+# @admin.register(TeamEventParticipation, site=admin_site)
 class TeamEventParticipationAdmin(admin.ModelAdmin):
     list_display = ['event_score', 'player', 'participated', 'created_at']
     list_filter = ['participated', 'event_score__event', 'player__team', 'created_at']
@@ -926,7 +978,8 @@ admin.site.register(Event, EventAdmin)
 admin.site.register(EventParticipation, EventParticipationAdmin)
 admin.site.register(EventVote, EventVoteAdmin)
 admin.site.register(EventScore, EventScoreAdmin)
-admin.site.register(TeamEventParticipation, TeamEventParticipationAdmin)
+# TeamEventParticipation is hidden from main admin for simplicity
+# admin.site.register(TeamEventParticipation, TeamEventParticipationAdmin)
 admin.site.register(IndividualParticipation, IndividualParticipationAdmin)
 admin.site.register(IndividualEventScore, IndividualEventScoreAdmin)
 admin.site.register(IndividualEventVote, IndividualEventVoteAdmin)
