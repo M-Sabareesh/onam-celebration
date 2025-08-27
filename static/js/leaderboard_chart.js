@@ -15,21 +15,47 @@ function initTeamProgressChart(chartData) {
             plugins: {
                 legend: {
                     position: 'top',
+                    labels: {
+                        padding: 20,
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        boxWidth: 15,
+                        boxHeight: 15
+                    }
                 },
                 title: {
                     display: true,
-                    text: 'Team Score Progress Over Time',
+                    text: 'Team Performance Progress by Event',
                     font: {
-                        size: 16,
+                        size: 18,
                         weight: 'bold'
-                    }
+                    },
+                    padding: {
+                        top: 10,
+                        bottom: 30
+                    },
+                    color: '#2D3748'
                 },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
+                    backgroundColor: 'rgba(0,0,0,0.9)',
+                    titleColor: '#FFFFFF',
+                    bodyColor: '#FFFFFF',
+                    borderColor: '#FFFFFF',
+                    borderWidth: 2,
+                    cornerRadius: 8,
+                    displayColors: true,
                     callbacks: {
                         label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.y + ' points';
+                            return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + ' points';
+                        },
+                        title: function(context) {
+                            return 'After Event: ' + context[0].label;
                         }
                     }
                 }
@@ -38,26 +64,53 @@ function initTeamProgressChart(chartData) {
                 x: {
                     title: {
                         display: true,
-                        text: 'Date',
+                        text: 'Events Timeline',
                         font: {
+                            size: 16,
                             weight: 'bold'
-                        }
+                        },
+                        color: '#2D3748'
                     },
                     grid: {
-                        color: 'rgba(0,0,0,0.1)'
+                        color: 'rgba(0,0,0,0.1)',
+                        borderColor: '#4A5568',
+                        borderWidth: 2
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 0,
+                        font: {
+                            size: 12,
+                            weight: '500'
+                        },
+                        color: '#4A5568'
                     }
                 },
                 y: {
                     title: {
                         display: true,
-                        text: 'Cumulative Score',
+                        text: 'Total Points (Cumulative)',
                         font: {
+                            size: 16,
                             weight: 'bold'
-                        }
+                        },
+                        color: '#2D3748'
                     },
                     beginAtZero: true,
                     grid: {
-                        color: 'rgba(0,0,0,0.1)'
+                        color: 'rgba(0,0,0,0.1)',
+                        borderColor: '#4A5568',
+                        borderWidth: 2
+                    },
+                    ticks: {
+                        font: {
+                            size: 12,
+                            weight: '500'
+                        },
+                        color: '#4A5568',
+                        callback: function(value) {
+                            return value + ' pts';
+                        }
                     }
                 }
             },
@@ -68,12 +121,22 @@ function initTeamProgressChart(chartData) {
             },
             elements: {
                 line: {
-                    tension: 0.3
+                    tension: 0.3,
+                    borderWidth: 4
                 },
                 point: {
-                    radius: 4,
-                    hoverRadius: 6
+                    radius: 7,
+                    hoverRadius: 10,
+                    borderWidth: 3,
+                    hoverBorderWidth: 4
                 }
+            },
+            animation: {
+                duration: 2500,
+                easing: 'easeInOutQuart'
+            },
+            onHover: (event, activeElements) => {
+                event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
             }
         }
     });

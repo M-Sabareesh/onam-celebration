@@ -11,7 +11,7 @@
             <i class="fas fa-trophy me-2"></i>
             Onam Aghosham Leaderboard
         </h1>
-        <p class="lead">See how teams and players are performing in treasure hunt and events!</p>
+        <p class="lead">See how teams and players are performing in Chodya Onam and events!</p>
     </div>
 
     <!-- Team Standings -->
@@ -21,7 +21,7 @@
                 <div class="card-header bg-primary text-white">
                     <h3 class="mb-0">
                         <i class="fas fa-users me-2"></i>
-                        Team Standings (Treasure Hunt + Events)
+                        Team Standings (Chodya Onam + Events)
                     </h3>
                 </div>
                 <div class="card-body">
@@ -55,7 +55,7 @@
                                         <div class="col-md-6">
                                             <h6 class="text-muted mb-2">Score Breakdown:</h6>
                                             <div class="mb-1">
-                                                <small class="text-muted">Treasure Hunt:</small>
+                                                <small class="text-muted">Chodya Onam:</small>
                                                 <span class="badge bg-info float-end">{{ team_data.treasure_hunt_score }} pts</span>
                                             </div>
                                             {% if team_data.individual_event_score > 0 %}
@@ -83,25 +83,6 @@
                             </div>
                         </div>
                         {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Team Progress Chart -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h3 class="mb-0">
-                        <i class="fas fa-chart-line me-2"></i>
-                        Team Progress Over Time
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div style="height: 400px; position: relative;">
-                        <canvas id="teamProgressChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -290,15 +271,35 @@
         </div>
     </div>
 
+    <!-- Team Progress Chart Section - Moved to Bottom -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Team Performance Progress by Event
+                    </h3>
+                    <p class="mb-0 mt-2">Track how teams have progressed through events over time (cumulative points)</p>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 450px;">
+                        <canvas id="teamProgressChart" width="100%" height="450"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Call to Action -->
     <div class="row mt-5">
         <div class="col-12 text-center">
             <div class="card bg-light">
                 <div class="card-body">
                     <h4 class="text-success mb-3">Join the Competition!</h4>
-                    <p class="lead mb-3">Ready to climb the leaderboard in treasure hunt and vote in events?</p>
+                    <p class="lead mb-3">Ready to climb the leaderboard in Chodya Onam and vote in events?</p>
                     <a href="{% url 'core:select_player' %}" class="btn btn-onam btn-lg me-3">
-                        <i class="fas fa-play me-2"></i>Start Treasure Hunt
+                        <i class="fas fa-play me-2"></i>Start Chodya Onam
                     </a>
                     <a href="{% url 'core:events_list' %}" class="btn btn-warning btn-lg me-3">
                         <i class="fas fa-star me-2"></i>View Events
@@ -328,7 +329,6 @@ document.addEventListener('DOMContentLoaded', function() {
         initTeamProgressChart(chartData);
     }
 });
-</script>
 </script>
 
 <style>
