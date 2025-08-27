@@ -26,13 +26,13 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        {% for team_name, team_data in team_standings %}
+                        {% for team_code, team_data in team_standings %}
                         <div class="col-md-6 mb-3">
                             <div class="card border-{% if forloop.counter == 1 %}warning{% elif forloop.counter == 2 %}secondary{% elif forloop.counter == 3 %}dark{% else %}light{% endif %}">
                                 <div class="card-header bg-{% if forloop.counter == 1 %}warning{% elif forloop.counter == 2 %}secondary{% elif forloop.counter == 3 %}dark{% else %}light{% endif %} text-{% if forloop.counter <= 3 %}white{% else %}dark{% endif %}">
                                     <h5 class="mb-0">
                                         {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}.{% endif %}
-                                        {{ team_name }}
+                                        {{ team_data.name }}
                                         <span class="float-end">{{ team_data.total_score }} pts</span>
                                     </h5>
                                 </div>

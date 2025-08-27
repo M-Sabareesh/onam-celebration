@@ -431,8 +431,9 @@ class LeaderboardView(TemplateView):
                 try:
                     from .models import TeamConfiguration
                     team_name = TeamConfiguration.get_team_name(team_code)
-                except:
-                    team_name = dict(Player.TEAM_CHOICES).get(team_code, team_code)
+                except Exception as e:
+                    print(f"Warning: Could not get team name for {team_code}: {e}")
+                    team_name = team_info.get('name', team_code)
                 
                 team_scores = []
                 
