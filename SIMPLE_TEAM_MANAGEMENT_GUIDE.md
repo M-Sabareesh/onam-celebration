@@ -1,5 +1,21 @@
 # 🏆 SIMPLE TEAM NAME MANAGEMENT GUIDE
 
+## 🚨 URGENT: Database Issue Fix
+
+**If you're seeing "no such table: core_teamconfiguration" error:**
+
+### Quick Fix for Production (Render.com)
+Update your **Start Command** in Render dashboard to:
+```bash
+python quick_fix.py && gunicorn onam_project.wsgi:application
+```
+
+### Quick Fix for Local Development
+Windows: Run `fix_database.bat`
+Others: Run `python quick_fix.py`
+
+---
+
 ## What You Want
 Change team names from "Team 1", "Team 2" to custom names like "Red Warriors", "Blue Champions", etc.
 

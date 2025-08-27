@@ -5,20 +5,39 @@ Your Render deployment is failing because the `core_teamconfiguration` table is 
 
 ## 🔥 IMMEDIATE FIX FOR RENDER.COM
 
-### Option 1: Update Your Build/Start Commands (Recommended)
+### Option 1: Update Your Start Command (Fastest Fix)
 
 1. **Go to Render Dashboard**
 2. **Find your web service**
 3. **Go to Settings**
-4. **Update Build Command**:
+4. **Update Start Command to**:
+   ```bash
+   python quick_fix.py && gunicorn onam_project.wsgi:application
+   ```
+5. **Deploy again**
+
+### Option 2: Alternative Start Commands
+
+Try these Start Commands in order:
+```bash
+python manage.py migrate && gunicorn onam_project.wsgi:application
+```
+
+Or:
+```bash
+python direct_fix.py && gunicorn onam_project.wsgi:application
+```
+
+### Option 3: Build + Start Commands (Comprehensive)
+
+1. **Build Command**:
    ```bash
    pip install -r requirements.txt && python emergency_production_fix.py
    ```
-5. **Update Start Command**:
+2. **Start Command**:
    ```bash
    python safe_start.py
    ```
-6. **Deploy again**
 
 ### Option 2: Alternative Start Command
 
@@ -36,14 +55,31 @@ python emergency_production_fix.py
 
 ## 🔧 What the Fix Does
 
-The `emergency_production_fix.py` script will:
-1. ✅ Check which database tables exist
-2. ✅ Apply missing migrations safely
-3. ✅ Create missing tables manually if needed
-4. ✅ Set up TeamConfiguration with default teams
-5. ✅ Create sample data for charts
-6. ✅ Create superuser account
-7. ✅ Verify everything is working
+The fix scripts will:
+1. ✅ Run Django migrations to create missing tables
+2. ✅ Create `core_teamconfiguration` table
+3. ✅ Set up default team configurations
+4. ✅ Create admin user if needed
+5. ✅ Verify database integrity
+
+### Available Fix Scripts
+
+- **`quick_fix.py`** - Fastest, minimal fix
+- **`direct_fix.py`** - Comprehensive database check and fix
+- **`emergency_production_fix.py`** - Full production emergency fix
+- **`safe_start.py`** - Safe server startup with checks
+
+### For Local Development (Windows)
+
+Run the batch file:
+```cmd
+fix_database.bat
+```
+
+Or run manually:
+```cmd
+python quick_fix.py
+```
 
 ## 📋 Environment Variables to Set
 

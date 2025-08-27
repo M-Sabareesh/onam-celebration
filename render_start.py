@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
-Smart deployment script for Render - handles Redis gracefully with database fallback.
+Smart deployment script for Render - handles database setup gracefully.
+Updated to handle missing TeamConfiguration table.
 """
 
 import os
@@ -22,32 +23,117 @@ from django.db import connection
 from django.db.utils import OperationalError
 
 def check_database_setup():
-    """Check if database is accessible and has tables."""
+    """Check if database is accessible and has basic tables."""
     try:
         # Try to access the database
         connection.ensure_connection()
         
         # Check if django_migrations table exists (indicates migrations have been run)
         with connection.cursor() as cursor:
-            # Works for both PostgreSQL and SQLite
-            cursor.execute("""
-                SELECT table_name FROM information_schema.tables 
-                WHERE table_name = 'django_migrations'
-                UNION ALL
-                SELECT name as table_name FROM sqlite_master 
-                WHERE type='table' AND name='django_migrations'
-                LIMIT 1;
-            """)
-            result = cursor.fetchone()
+            try:
+                # For PostgreSQL
+                cursor.execute("""
+                    SELECT table_name FROM information_schema.tables 
+                    WHERE table_name = 'django_migrations'
+                    LIMIT 1;
+                """)
+                result = cursor.fetchone()
+                if result:
+                    return True
+            except:
+                pass
             
-        return result is not None
+            try:
+                # For SQLite
+                cursor.execute("""
+                    SELECT name FROM sqlite_master 
+                    WHERE type='table' AND name='django_migrations'
+                    LIMIT 1;
+                """)
+                result = cursor.fetchone()
+                return result is not None
+            except:
+                return False
+                
     except OperationalError:
         return False
     except Exception:
-        # If the query fails (e.g., information_schema doesn't exist), 
-        # try a simpler approach
-        try:
-            with connection.cursor() as cursor:
+        return False
+
+def ensure_team_configuration_table():
+    """Ensure TeamConfiguration table exists and has default data"""
+    try:
+        print("🏆 Checking TeamConfiguration table...")
+        
+        with connection.cursor() as cursor:
+            # Check if table exists
+            try:
+                cursor.execute("SELECT COUNT(*) FROM core_teamconfiguration LIMIT 1;")
+                count = cursor.fetchone()[0]
+                print(f"✅ TeamConfiguration table exists with {count} teams")
+                
+                # If table exists but is empty, add default teams
+                if count == 0:
+                    print("📝 Adding default teams...")
+                    default_teams = [
+                        ('team_1', 'Red Warriors'),
+                        ('team_2', 'Blue Champions'),
+                        ('team_3', 'Green Masters'),
+                        ('team_4', 'Yellow Legends'),
+                        ('unassigned', 'Unassigned'),
+                    ]
+                    
+                    for team_code, team_name in default_teams:
+                        cursor.execute("""
+                            INSERT OR IGNORE INTO core_teamconfiguration 
+                            (team_code, team_name, is_active, created_at, updated_at)
+                            VALUES (?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        """, [team_code, team_name])
+                    
+                    print("✅ Default teams added")
+                
+                return True
+                
+            except OperationalError as e:
+                if "no such table" in str(e).lower():
+                    print("🛠️  Creating TeamConfiguration table...")
+                    
+                    # Create the table
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS core_teamconfiguration (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            team_code VARCHAR(20) UNIQUE NOT NULL,
+                            team_name VARCHAR(100) NOT NULL,
+                            is_active BOOLEAN DEFAULT 1,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        );
+                    """)
+                    
+                    # Add default teams
+                    default_teams = [
+                        ('team_1', 'Red Warriors'),
+                        ('team_2', 'Blue Champions'),
+                        ('team_3', 'Green Masters'),
+                        ('team_4', 'Yellow Legends'),
+                        ('unassigned', 'Unassigned'),
+                    ]
+                    
+                    for team_code, team_name in default_teams:
+                        cursor.execute("""
+                            INSERT OR IGNORE INTO core_teamconfiguration 
+                            (team_code, team_name, is_active, created_at, updated_at)
+                            VALUES (?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        """, [team_code, team_name])
+                    
+                    print("✅ TeamConfiguration table created with default teams")
+                    return True
+                else:
+                    raise e
+                    
+    except Exception as e:
+        print(f"⚠️  Could not setup TeamConfiguration: {e}")
+        return False
                 cursor.execute("SELECT 1 FROM django_migrations LIMIT 1;")
             return True
         except:
