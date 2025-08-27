@@ -29,8 +29,13 @@ CSRF_TRUSTED_ORIGINS = [
     'https://onam-celebration.onrender.com'
 ]
 
-# Static files - Using forgiving storage for production
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# Static files - Temporary fix for manifest issues
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+# Whitenoise settings
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True
 
 DATABASES = {
     'default': dj_database_url.config(

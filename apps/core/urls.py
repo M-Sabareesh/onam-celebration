@@ -21,4 +21,7 @@ urlpatterns = [
     path('api/traditions/', views.traditions_api, name='traditions_api'),
     path('api/team-status/', views.team_status_api, name='team_status_api'),
     path('api/events/<int:event_id>/voting/', views.EventVotingAPI.as_view(), name='event_voting_api'),
+    
+    # Team Management (works without static files)
+    path('team-management/', views.team_management, name='team_management'),
 ]

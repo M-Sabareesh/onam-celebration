@@ -35,6 +35,38 @@ python immediate_static_fix.py && python safe_start.py
 - Maveli images not in static manifest
 - Changed to `CompressedStaticFilesStorage` for safety
 
+## 🏆 TEAM NAME MANAGEMENT SOLUTION
+
+### ✅ Direct Access (Works Without Static Files)
+Even if the admin panel has static file issues, you can now manage team names directly:
+
+**Team Management URL:** `/team-management/`
+
+### 🎯 How to Update Team Names
+
+1. **Access the page**: `https://your-site.com/team-management/`
+2. **Change team names**:
+   - Team 1 → "Red Warriors"
+   - Team 2 → "Blue Champions" 
+   - Team 3 → "Green Guardians"
+   - Team 4 → "Golden Eagles"
+3. **Click "Save Team Names"**
+4. **See changes immediately** on leaderboard and charts
+
+### 📋 Setup Command for Render
+
+Add this to your **Start Command**:
+```bash
+python deploy_team_management.py && python manage.py collectstatic --noinput --clear && gunicorn onam_project.wsgi:application
+```
+
+This will:
+- ✅ Set up team management system
+- ✅ Create default teams (Team 1, Team 2, etc.)
+- ✅ Create admin user (admin/admin123)
+- ✅ Collect static files
+- ✅ Start the server
+
 ### 📦 New Fix Scripts Created
 
 #### `final_deploy.py` (Recommended)

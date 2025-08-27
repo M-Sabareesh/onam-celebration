@@ -905,3 +905,75 @@ class EventVotingAPI(View):
                 'status': 'error',
                 'message': str(e)
             }, status=500)
+
+
+# Team Management View - Works without static files
+from django.contrib.admin.views.decorators import staff_member_required
+from .models import TeamConfiguration
+
+@staff_member_required
+def team_management(request):
+    """Simple team management interface that works without static files"""
+    if request.method == 'POST':
+        # Update team names
+        updated_count = 0
+        for key, value in request.POST.items():
+            if key.startswith('team_') and key != 'csrfmiddlewaretoken':
+                team_code = key.replace('team_', '')
+                if value.strip():
+                    try:
+                        team = TeamConfiguration.objects.get(team_code=team_code)
+                        old_name = team.team_name
+                        team.team_name = value.strip()
+                        team.save()
+                        updated_count += 1
+                        print(f"✅ Updated {team_code}: '{old_name}' → '{team.team_name}'")
+                    except TeamConfiguration.DoesNotExist:
+                        team = TeamConfiguration.objects.create(
+                            team_code=team_code,
+                            team_name=value.strip()
+                        )
+                        updated_count += 1
+                        print(f"✅ Created {team_code}: '{team.team_name}'")
+        
+        messages.success(request, f'Team names updated successfully! ({updated_count} teams updated)')
+        return redirect('core:team_management')
+    
+    # Get teams with player counts
+    teams = []
+    for team in TeamConfiguration.objects.all().order_by('team_code'):
+        try:
+            player_count = Player.objects.filter(team=team.team_code, is_active=True).count()
+            total_players = Player.objects.filter(team=team.team_code).count()
+            teams.append({
+                'team_code': team.team_code,
+                'team_name': team.team_name,
+                'player_count': f"{player_count} active players ({total_players} total)"
+            })
+        except Exception as e:
+            teams.append({
+                'team_code': team.team_code,
+                'team_name': team.team_name,
+                'player_count': "0 players"
+            })
+    
+    # Ensure we have default teams
+    default_teams = ['team_1', 'team_2', 'team_3', 'team_4']
+    existing_codes = [t['team_code'] for t in teams]
+    
+    for i, team_code in enumerate(default_teams, 1):
+        if team_code not in existing_codes:
+            team = TeamConfiguration.objects.create(
+                team_code=team_code,
+                team_name=f'Team {i}'
+            )
+            teams.append({
+                'team_code': team.team_code,
+                'team_name': team.team_name,
+                'player_count': "0 players"
+            })
+    
+    return render(request, 'core/team_management.html', {
+        'teams': sorted(teams, key=lambda x: x['team_code']),
+        'success': 'success' in request.GET
+    })

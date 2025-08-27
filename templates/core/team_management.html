@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Team Name Management - Onam Celebration</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 50%, #d4af37 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 40px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 { 
+            color: #d4af37; 
+            text-align: center; 
+            margin-bottom: 30px; 
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .crown { font-size: 1.2em; margin: 0 10px; }
+        .team-form { 
+            margin: 25px 0; 
+            padding: 25px; 
+            background: #f8f9fa; 
+            border-radius: 10px; 
+            border-left: 5px solid #d4af37;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .team-form h3 { 
+            margin-top: 0; 
+            color: #333; 
+            font-size: 1.3em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label { 
+            display: block; 
+            font-weight: bold; 
+            margin-bottom: 8px; 
+            color: #555;
+        }
+        input[type="text"] { 
+            width: 100%; 
+            padding: 15px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus { 
+            border-color: #d4af37; 
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+        .btn { 
+            background: #d4af37; 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            margin: 10px 10px 10px 0; 
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s ease;
+            font-weight: bold;
+        }
+        .btn:hover { 
+            background: #b8941f; 
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin: 20px 0; 
+            border: 1px solid #c3e6cb;
+            font-weight: bold;
+        }
+        .info { 
+            background: #d1ecf1; 
+            color: #0c5460; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin: 20px 0; 
+            border: 1px solid #bee5eb;
+        }
+        .player-count { 
+            font-size: 14px; 
+            color: #666; 
+            margin-top: 10px;
+            font-style: italic;
+        }
+        .button-group {
+            text-align: center; 
+            margin-top: 40px; 
+            padding-top: 30px; 
+            border-top: 2px solid #e9ecef;
+        }
+        .examples {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px solid #dee2e6;
+        }
+        .examples h4 {
+            color: #d4af37;
+            margin-top: 0;
+        }
+        .example-category {
+            margin: 10px 0;
+        }
+        .example-category strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span class="crown">👑</span>Team Name Management<span class="crown">👑</span></h1>
+        
+        <div class="info">
+            <strong>📝 Instructions:</strong> Change team names from "Team 1", "Team 2" etc. to any custom names you want. 
+            These names will appear throughout the site including leaderboards, charts, and all displays.
+        </div>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="success">✅ {{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            {% for team in teams %}
+            <div class="team-form">
+                <h3>🏆 {{ team.team_code|title|slice:"5:" }}</h3>
+                <div class="form-group">
+                    <label for="team_{{ team.team_code }}">Team Display Name:</label>
+                    <input type="text" 
+                           id="team_{{ team.team_code }}"
+                           name="team_{{ team.team_code }}" 
+                           value="{{ team.team_name }}" 
+                           placeholder="Enter custom team name (e.g., Red Warriors, Maveli Squad)..."
+                           required>
+                </div>
+                <div class="player-count">👥 {{ team.player_count }}</div>
+            </div>
+            {% endfor %}
+            
+            <div class="button-group">
+                <button type="submit" class="btn">💾 Save Team Names</button>
+                <a href="/leaderboard/" class="btn btn-secondary">📊 View Leaderboard</a>
+                <a href="/custom-admin/" class="btn btn-secondary">⚙️ Admin Panel</a>
+            </div>
+        </form>
+        
+        <div class="examples">
+            <h4>💡 Creative Team Name Ideas:</h4>
+            <div class="example-category">
+                <strong>🏺 Mythological Theme:</strong> "Maveli Squad", "Vamana Warriors", "Parashurama Force", "Bhima Champions"
+            </div>
+            <div class="example-category">
+                <strong>🎨 Color + Strength:</strong> "Red Warriors", "Blue Titans", "Green Guardians", "Golden Eagles"
+            </div>
+            <div class="example-category">
+                <strong>🌺 Onam Festival:</strong> "Pookalam Masters", "Thiruvathira Stars", "Onam Champions", "Kerala Legends"
+            </div>
+            <div class="example-category">
+                <strong>🌟 Modern:</strong> "Thunder Bolts", "Fire Dragons", "Storm Eagles", "Lightning Wolves"
+            </div>
+        </div>
+    </div>
+</body>
+</html>
