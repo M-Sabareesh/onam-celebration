@@ -47,6 +47,18 @@ def run_emergency_fix():
             print(f"❌ Emergency fix failed: {fix_error}")
             return False
 
+def collect_static_files():
+    """Collect static files with error handling"""
+    try:
+        print("📦 Collecting static files...")
+        from django.core.management import call_command
+        call_command('collectstatic', verbosity=0, interactive=False, clear=True)
+        print("✅ Static files collected")
+        return True
+    except Exception as e:
+        print(f"⚠️  Static collection issue (continuing anyway): {e}")
+        return True  # Don't fail startup for static files
+
 def start_server():
     """Start the Gunicorn server"""
     print("🚀 Starting production server...")
@@ -82,6 +94,9 @@ def main():
     
     if not fix_success:
         print("⚠️  Database issues detected but continuing...")
+    
+    # Collect static files
+    collect_static_files()
     
     # Start the server
     start_server()

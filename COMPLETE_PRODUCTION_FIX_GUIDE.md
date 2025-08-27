@@ -1,36 +1,74 @@
 # 🚨 COMPLETE PRODUCTION FIX GUIDE
-## Django Session Error + Empty Graph + Team Management
+## Database + Static Files + Team Management Issues
 
-### Problem Summary
-1. **Site is down**: `OperationalError: no such table: django_session`
-2. **Graph is empty**: No data showing on leaderboard chart
-3. **Need team management**: Admin interface to change team names
+### Current Issues
+1. **Database**: `OperationalError: no such table: core_teamconfiguration` ✅ FIXED
+2. **Static Files**: `Missing staticfiles manifest entry for 'images/Maveli.jpg'` 🔧 FIXING
+3. **Site Error**: 500 Internal Server Error on homepage
+4. **Team Management**: Need admin interface to change team names
 
-### 🔥 IMMEDIATE FIX (Choose One Method)
+### 🔥 IMMEDIATE FIX FOR RENDER.COM
 
-#### Option 1: Run Complete Fix Script (Recommended)
+#### Quick Fix (Update Start Command)
+In your Render dashboard, update **Start Command** to:
 ```bash
-# In your production environment
-python complete_production_fix.py
+python final_deploy.py
 ```
 
-#### Option 2: Use Deployment Script
+#### Alternative Start Commands (Try in order)
 ```bash
-# In your production environment
-bash deploy_complete_fix.sh
+python quick_fix.py && python manage.py collectstatic --noinput && gunicorn onam_project.wsgi:application
 ```
 
-#### Option 3: Manual Steps
 ```bash
-# 1. Fix database migrations
-python manage.py migrate contenttypes --noinput
-python manage.py migrate auth --noinput
-python manage.py migrate sessions --noinput
-python manage.py migrate admin --noinput
-python manage.py migrate core --noinput
-python manage.py migrate --noinput
+python immediate_static_fix.py && python safe_start.py
+```
 
-# 2. Create sample data for graphs
+### 🔧 What The Current Issues Are
+
+#### Database Issue ✅ RESOLVED
+- `core_teamconfiguration` table was missing
+- Fixed by running migrations and creating default teams
+
+#### Static Files Issue 🔧 FIXING
+- Production uses `CompressedManifestStaticFilesStorage` which is too strict
+- Maveli images not in static manifest
+- Changed to `CompressedStaticFilesStorage` for safety
+
+### 📦 New Fix Scripts Created
+
+#### `final_deploy.py` (Recommended)
+Complete deployment script that:
+- Runs migrations
+- Sets up team configurations  
+- Collects static files
+- Creates admin user
+- Starts server
+
+#### `immediate_static_fix.py`
+Quick static files fix that:
+- Collects static files properly
+- Checks for Maveli images
+- Reports status
+
+#### `quick_fix.py` 
+Fast database and basic setup:
+- Creates missing tables
+- Sets up default teams
+- Creates admin user
+
+### 🏆 After Fix Success
+
+Once fixed, you'll have:
+- ✅ Working homepage with Maveli images
+- ✅ Admin panel at `/admin/` (admin/admin123)
+- ✅ Team name management in Core > Team configurations  
+- ✅ Working charts and leaderboard
+- ✅ All database tables created
+
+## 🔄 Legacy Fix Methods (For Reference)
+
+### Manual Steps (If Scripts Don't Work)
 python manage.py shell -c "
 from apps.core.models import Player, Event, EventScore, TeamConfiguration
 import random

@@ -29,8 +29,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://onam-celebration.onrender.com'
 ]
 
-# Static files
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Static files - Using forgiving storage for production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 DATABASES = {
     'default': dj_database_url.config(
