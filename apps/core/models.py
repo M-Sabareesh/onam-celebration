@@ -269,7 +269,7 @@ class IndividualEventScore(models.Model):
             self.update_player_score()
     
     def update_player_score(self):
-        """Update the player's total score from treasure hunt and individual events"""
+        """Update the player's total score from treasure hunt, individual events, and team events"""
         from django.db.models import Sum
         
         # Get treasure hunt score
@@ -283,8 +283,16 @@ class IndividualEventScore(models.Model):
             player=self.player
         ).aggregate(Sum('points'))['points__sum'] or 0
         
+        # Get team event contributions (this player's share of team events they participated in)
+        team_event_total = 0
+        for event_score in EventScore.objects.filter(team=self.player.team):
+            participants = event_score.get_participants()
+            if participants.filter(player=self.player).exists() and participants.count() > 0:
+                team_event_total += float(event_score.points) / participants.count()
+        
         # Update player's total score
-        self.player.score = treasure_hunt_score + float(individual_event_score)
+        new_total = treasure_hunt_score + float(individual_event_score) + team_event_total
+        self.player.score = new_total
         self.player.save(update_fields=['score'])
     
     def __str__(self):
@@ -405,11 +413,60 @@ class EventScore(models.Model):
         ordering = ['-points', 'team']
     
     def save(self, *args, **kwargs):
-        """Auto-calculate points if enabled"""
+        """Auto-calculate points if enabled and update participant scores"""
         if self.auto_calculate_points and self.points_per_participant > 0:
             participant_count = self.get_participants().count()
             self.points = self.points_per_participant * participant_count
+        
         super().save(*args, **kwargs)
+        
+        # Update individual player scores for participants
+        self.update_participant_scores()
+    
+    def update_participant_scores(self):
+        """Update individual scores for players who participated in this team event"""
+        if self.points <= 0:
+            return
+            
+        participants = self.get_participants()
+        if not participants.exists():
+            return
+            
+        # Calculate individual points per participant
+        individual_points = float(self.points) / participants.count() if participants.count() > 0 else 0
+        
+        for participation in participants:
+            player = participation.player
+            
+            # Update player's total score including this team event contribution
+            self.update_single_player_score(player, individual_points)
+    
+    def update_single_player_score(self, player, team_event_points):
+        """Update a single player's total score including team event contributions"""
+        from django.db.models import Sum
+        
+        # Get treasure hunt score
+        treasure_hunt_score = PlayerAnswer.objects.filter(
+            player=player, 
+            is_correct=True
+        ).aggregate(Sum('points_awarded'))['points_awarded__sum'] or 0
+        
+        # Get individual event scores
+        individual_event_score = IndividualEventScore.objects.filter(
+            player=player
+        ).aggregate(Sum('points'))['points__sum'] or 0
+        
+        # Get team event contributions (this player's share of team events they participated in)
+        team_event_total = 0
+        for event_score in EventScore.objects.filter(team=player.team):
+            participants = event_score.get_participants()
+            if participants.filter(player=player).exists() and participants.count() > 0:
+                team_event_total += float(event_score.points) / participants.count()
+        
+        # Update player's total score
+        new_total = treasure_hunt_score + float(individual_event_score) + team_event_total
+        player.score = new_total
+        player.save(update_fields=['score'])
     
     def get_participants(self):
         """Get players who participated in this team event"""
@@ -450,6 +507,23 @@ class TeamEventParticipation(models.Model):
         # Ensure player is from the same team as the event score
         if self.player.team != self.event_score.team:
             raise ValidationError(f"Player {self.player.name} is not from {self.event_score.get_team_display()}")
+    
+    def save(self, *args, **kwargs):
+        """Save participation and update player scores"""
+        super().save(*args, **kwargs)
+        
+        # Trigger score update for the event score (which will update all participants)
+        if self.event_score:
+            self.event_score.update_participant_scores()
+    
+    def delete(self, *args, **kwargs):
+        """Delete participation and update scores"""
+        event_score = self.event_score
+        super().delete(*args, **kwargs)
+        
+        # Update scores after deletion
+        if event_score:
+            event_score.update_participant_scores()
     
     def __str__(self):
         status = "✓" if self.participated else "✗"
