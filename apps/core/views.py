@@ -4,12 +4,13 @@ from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView, View
 from django.contrib import messages
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.core.files.storage import default_storage
 from django.utils import timezone
 from datetime import timedelta
 from .models import Player, GameSession, TreasureHuntQuestion, PlayerAnswer, SimpleEventScore
 from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.http import require_POST
 
 
 class HomeView(TemplateView):
@@ -1094,3 +1095,24 @@ def delete_simple_score(request, score_id):
             messages.error(request, f'Error deleting score: {str(e)}')
     
     return redirect('core:simple_event_scoring')
+
+
+@staff_member_required
+@require_POST
+@csrf_protect
+def get_team_players(request):
+    """AJAX endpoint to get players filtered by team for admin interface"""
+    team_code = request.POST.get('team')
+    
+    if not team_code:
+        return JsonResponse({'players': []})
+    
+    # Get players for the selected team
+    players = Player.objects.filter(
+        team=team_code, 
+        is_active=True
+    ).order_by('name').values('id', 'name')
+    
+    return JsonResponse({
+        'players': list(players)
+    })

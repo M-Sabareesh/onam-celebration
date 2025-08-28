@@ -754,6 +754,9 @@ class EventScoreAdmin(admin.ModelAdmin):
     readonly_fields = ['awarded_at', 'participant_count']
     inlines = [TeamEventParticipationInline]
     
+    class Media:
+        js = ('js/admin_team_filter.js',)
+    
     fieldsets = (
         ('Score Information', {
             'fields': ('event', 'team')
@@ -1024,4 +1027,3 @@ admin.site.register(EventScore, EventScoreAdmin)
 admin.site.register(IndividualParticipation, IndividualParticipationAdmin)
 admin.site.register(IndividualEventScore, IndividualEventScoreAdmin)
 admin.site.register(IndividualEventVote, IndividualEventVoteAdmin)
-admin.site.register(SimpleEventScore, SimpleEventScoreAdmin)

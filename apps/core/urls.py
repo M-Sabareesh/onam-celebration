@@ -25,6 +25,9 @@ urlpatterns = [
     # Team Management (works without static files)
     path('team-management/', views.team_management, name='team_management'),
     
+    # Admin AJAX endpoints
+    path('admin/get-team-players/', views.get_team_players, name='get_team_players'),
+    
     # Simple Event Scoring (admin only) - Multiple access points
     path('admin/simple-scoring/', views.simple_event_scoring, name='simple_event_scoring'),
     path('simple-scoring/', views.simple_event_scoring, name='simple_scoring_direct'),  # Direct access

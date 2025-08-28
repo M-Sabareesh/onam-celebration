@@ -33,9 +33,14 @@ CSRF_TRUSTED_ORIGINS = [
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-# Whitenoise settings
+# Media files configuration for production
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Whitenoise settings - Enable media file serving
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = True
+WHITENOISE_ROOT = MEDIA_ROOT  # Serve media files through whitenoise
 
 DATABASES = {
     'default': dj_database_url.config(
