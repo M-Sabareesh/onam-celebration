@@ -37,6 +37,12 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Ensure media directory exists
+os.makedirs(MEDIA_ROOT, exist_ok=True)
+os.makedirs(os.path.join(MEDIA_ROOT, 'question_images'), exist_ok=True)
+os.makedirs(os.path.join(MEDIA_ROOT, 'treasure_hunt_photos'), exist_ok=True)
+os.makedirs(os.path.join(MEDIA_ROOT, 'avatars'), exist_ok=True)
+
 # Whitenoise settings - Enable media file serving
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = True

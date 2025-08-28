@@ -1116,3 +1116,26 @@ def get_team_players(request):
     return JsonResponse({
         'players': list(players)
     })
+
+# Custom media serving for production
+@staff_member_required
+def serve_media(request, path):
+    """Custom media file serving for production"""
+    try:
+        from django.http import FileResponse
+        from django.conf import settings
+        import os
+        
+        # Build the full file path
+        file_path = os.path.join(settings.MEDIA_ROOT, path)
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            from django.http import Http404
+            raise Http404("Media file not found")
+        
+        # Serve the file
+        return FileResponse(open(file_path, 'rb'))
+    except Exception as e:
+        from django.http import HttpResponse
+        return HttpResponse(f"Error serving media file: {e}", status=500)

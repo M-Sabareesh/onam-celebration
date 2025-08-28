@@ -755,7 +755,7 @@ class EventScoreAdmin(admin.ModelAdmin):
     inlines = [TeamEventParticipationInline]
     
     class Media:
-        js = ('js/admin_team_filter.js',)
+        js = ('admin/js/vendor/jquery/jquery.min.js', 'js/admin_team_filter.js')
     
     fieldsets = (
         ('Score Information', {
@@ -835,9 +835,6 @@ class EventScoreAdmin(admin.ModelAdmin):
         # Recalculate points if auto-calculation is enabled
         if form.instance.auto_calculate_points:
             form.instance.save()  # This will trigger the auto-calculation
-
-    class Media:
-        js = ('js/admin_event_score.js',)  # Optional JS for enhanced UX
 
 
 # Hide TeamEventParticipation from main admin - it's for advanced event management only

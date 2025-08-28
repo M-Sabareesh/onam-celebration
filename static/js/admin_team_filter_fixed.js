@@ -6,18 +6,6 @@
 (function($) {
     'use strict';
     
-    // Wait for Django admin to be ready
-    $(document).ready(function() {
-        initializeTeamFiltering();
-        
-        // Also initialize when new inlines are added
-        $(document).on('formset:added', function() {
-            setTimeout(function() {
-                initializeTeamFiltering();
-            }, 100);
-        });
-    });
-    
     function initializeTeamFiltering() {
         console.log('Initializing team-based player filtering...');
         
@@ -27,6 +15,8 @@
             console.log('Team select field not found');
             return;
         }
+        
+        console.log('Team select found, setting up change handler');
         
         // Set up event listener for team changes
         $teamSelect.off('change.teamfilter').on('change.teamfilter', function() {
@@ -41,6 +31,19 @@
             console.log('Initial team:', initialTeam);
             filterPlayersByTeam(initialTeam);
         }
+        
+        // Handle dynamically added inlines
+        $(document).on('formset:added', function(event, $row, formsetName) {
+            if (formsetName === 'teameventparticipation_set') {
+                console.log('New inline added, applying filtering');
+                var currentTeam = $teamSelect.val();
+                if (currentTeam) {
+                    setTimeout(function() {
+                        filterPlayersByTeam(currentTeam);
+                    }, 100);
+                }
+            }
+        });
     }
     
     function filterPlayersByTeam(selectedTeam) {
@@ -127,50 +130,24 @@
             }
         });
     }
-            console.log('Team select not found');
-            return;
-        }
-        
-        console.log('Team select found, setting up change handler');
-        
-        // Handle team selection change
-        $teamSelect.on('change', function() {
-            var selectedTeam = $(this).val();
-            console.log('Team changed to:', selectedTeam);
-            filterPlayersByTeam(selectedTeam);
-        });
-        
-        // Apply initial filtering if team is already selected
-        var initialTeam = $teamSelect.val();
-        if (initialTeam) {
-            console.log('Initial team selected:', initialTeam);
-            filterPlayersByTeam(initialTeam);
-        }
-        
-        // Handle dynamically added inlines
-        $(document).on('formset:added', function(event, $row, formsetName) {
-            if (formsetName === 'teameventparticipation_set') {
-                console.log('New inline added, applying filtering');
-                var currentTeam = $teamSelect.val();
-                if (currentTeam) {
-                    setTimeout(function() {
-                        filterPlayersByTeam(currentTeam);
-                    }, 100);
-                }
-            }
-        });
-    }
     
-    // Initialize when document is ready
+    // Wait for Django admin to be ready
     $(document).ready(function() {
         console.log('Document ready, initializing team filtering');
-        setupTeamFiltering();
+        initializeTeamFiltering();
+        
+        // Also initialize when new inlines are added
+        $(document).on('formset:added', function() {
+            setTimeout(function() {
+                initializeTeamFiltering();
+            }, 100);
+        });
     });
     
     // Also try to initialize after Django admin loads
     $(window).on('load', function() {
         console.log('Window loaded, ensuring team filtering is set up');
-        setTimeout(setupTeamFiltering, 500);
+        setTimeout(initializeTeamFiltering, 500);
     });
     
     // Global function for debugging

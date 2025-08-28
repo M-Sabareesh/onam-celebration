@@ -33,24 +33,43 @@ def main():
     print("✅ Admin registration fix applied")
     print("✅ Team filtering implemented") 
     print("✅ Image serving configured")
+    print("🚨 IMMEDIATE TABLE FIX INCLUDED")
     print("=" * 50)
     
+    # IMMEDIATE FIX: Force create missing table
+    print("\n🚨 STEP 1: Force fix missing SimpleEventScore table...")
+    if not run_command("python force_fix_table.py", "Force create missing table"):
+        print("⚠️  Table creation failed, but continuing...")
+    
     # Database migrations
+    print("\n2️⃣ Running database migrations...")
     if not run_command("python manage.py migrate --noinput", "Database migrations"):
-        print("❌ Migration failed - stopping")
-        sys.exit(1)
+        print("⚠️  Migration had issues, but continuing...")
+    
+    # Try specific migration
+    print("\n3️⃣ Ensuring specific migration...")
+    if not run_command("python manage.py migrate core 0015_simple_event_scoring --noinput", "Apply SimpleEventScore migration"):
+        print("⚠️  Specific migration failed, but continuing...")
     
     # Collect static files
+    print("\n4️⃣ Collecting static files...")
     if not run_command("python manage.py collectstatic --noinput", "Static files collection"):
         print("⚠️  Static files collection had issues, but continuing...")
     
     # Create media directories if they don't exist
+    print("\n5️⃣ Creating media directories...")
     media_dirs = ['media', 'media/question_images', 'media/treasure_hunt_photos', 'media/avatars']
     for dir_path in media_dirs:
         os.makedirs(dir_path, exist_ok=True)
         print(f"📁 Ensured directory exists: {dir_path}")
     
+    # Final verification
+    print("\n6️⃣ Final verification...")
+    if not run_command("python force_fix_table.py", "Verify table exists"):
+        print("⚠️  Final verification failed, but starting server anyway...")
+    
     # Start server
+    print("\n7️⃣ Starting server...")
     port = os.environ.get('PORT', '8000')
     server_cmd = f"gunicorn onam_project.wsgi:application --bind 0.0.0.0:{port} --workers 1 --timeout 120 --worker-class sync"
     

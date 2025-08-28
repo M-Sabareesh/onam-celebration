@@ -42,7 +42,13 @@
                             <img src="{{ question.question_image.url }}" 
                                  class="img-fluid rounded shadow-lg" 
                                  style="max-width: 100%; max-height: 400px; object-fit: contain;"
-                                 alt="Question Image">
+                                 alt="Question Image"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div style="display: none; padding: 20px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
+                                <i class="fas fa-image text-muted"></i>
+                                <p class="mb-0 text-muted">Image could not be loaded: {{ question.question_image.name }}</p>
+                                <small class="text-muted">URL: {{ question.question_image.url }}</small>
+                            </div>
                         </div>
                     {% endif %}
                     

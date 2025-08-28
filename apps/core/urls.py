@@ -28,6 +28,9 @@ urlpatterns = [
     # Admin AJAX endpoints
     path('admin/get-team-players/', views.get_team_players, name='get_team_players'),
     
+    # Custom media serving for production
+    path('media/<path:path>', views.serve_media, name='serve_media'),
+    
     # Simple Event Scoring (admin only) - Multiple access points
     path('admin/simple-scoring/', views.simple_event_scoring, name='simple_event_scoring'),
     path('simple-scoring/', views.simple_event_scoring, name='simple_scoring_direct'),  # Direct access

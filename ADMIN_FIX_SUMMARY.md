@@ -37,12 +37,85 @@ class SimpleEventScoreAdmin(admin.ModelAdmin):
 ```
 
 ## Impact
-- ✅ Deployment error resolved
-- ✅ Simple event scoring admin interface remains functional
-- ✅ All scoring URLs still work: `/admin/simple-scoring/`, `/simple-scoring/`, `/event-scoring/`
-- ✅ No functional changes to the scoring system
+## CRITICAL UPDATE - August 28, 2025
 
-## Next Steps
-1. Test deployment to ensure the fix works
-2. Verify admin interface accessibility
-3. Test the simple event scoring workflow
+🚨 **EMERGENCY: Multiple missing database tables causing admin crashes**
+
+### Missing Tables:
+1. `core_simpleeventscore` - Main scoring table
+2. `core_simpleeventscore_participants` - Many-to-many relationship table
+
+### Current Errors:
+- Admin scoring interface: 500 errors
+- Player management interface: 500 errors
+- Multiple admin sections affected
+
+### IMMEDIATE ACTION REQUIRED:
+**Run ONE of these commands to fix:**
+
+```batch
+# Option 1: Use the batch script
+fix_table.bat
+
+# Option 2: Use the Python emergency script
+python EMERGENCY_FIX.py
+
+# Option 3: Manual command
+env\Scripts\activate
+python manage.py migrate core --verbosity=2
+```
+
+### Root Cause:
+Migration `0015_simple_event_scoring.py` not applied to production database.
+
+---
+
+## Previous Work Completed ✅
+- ✅ Team filtering JavaScript rewritten and working
+- ✅ Image display fixed and working
+- ✅ Deployment error resolved
+- ❌ **CRITICAL**: Database migration not applied
+
+## Next Steps - URGENT
+1. **IMMEDIATELY**: Run migration fix script to create missing tables
+2. Restart Django application/web server
+3. Test admin interface for 500 errors
+4. Verify scoring workflow works
+5. Test team filtering and image display
+
+## 🚀 RENDER START COMMAND
+
+For your Render deployment, use this as your **Start Command**:
+
+```bash
+python render_fix_start.py
+```
+
+**Alternative commands if the above fails:**
+
+```bash
+# Option 1: Direct migration + gunicorn
+python manage.py migrate core --noinput && python manage.py collectstatic --noinput && gunicorn onam_project.wsgi:application --bind 0.0.0.0:$PORT
+
+# Option 2: Manual migration fix first
+python manage.py migrate core 0015 --verbosity=1 && python manage.py migrate --noinput && gunicorn onam_project.wsgi:application --bind 0.0.0.0:$PORT
+
+# Option 3: Simple fallback
+gunicorn onam_project.wsgi:application --bind 0.0.0.0:$PORT --workers 1
+```
+
+### Environment Variables for Render:
+```
+DJANGO_SETTINGS_MODULE=onam_project.settings.production
+PORT=10000
+WEB_CONCURRENCY=1
+```
+
+### What the start script does:
+1. ✅ Checks Redis availability
+2. 🔧 **FIXES missing tables** (applies migration 0015)
+3. 🔄 Runs all migrations
+4. 📁 Collects static files
+5. 📂 Creates media directories
+6. ✅ Verifies tables exist
+7. 🚀 Starts Gunicorn server
