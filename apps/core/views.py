@@ -983,20 +983,28 @@ def team_management(request):
 
 @staff_member_required
 def simple_event_scoring(request):
-    """Simple event scoring interface for admins"""
+    """Simple event scoring interface for admins - UPDATED VERSION"""
     from .models import Event, Player, SimpleEventScore, TeamConfiguration
     
     if request.method == 'POST':
         event_id = request.POST.get('event')
         team_code = request.POST.get('team')
         points = request.POST.get('points', 0)
-        event_type = request.POST.get('event_type', 'team')
-        participants = request.POST.getlist('participants')
+        selected_players = request.POST.getlist('players')  # Changed from participants to players
         notes = request.POST.get('notes', '')
         
         try:
             event = get_object_or_404(Event, id=event_id, is_active=True)
             points = float(points) if points else 0
+            
+            # Determine scoring type based on player selection
+            if selected_players:
+                event_type = 'hybrid'  # Team points distributed among selected players
+                # Calculate points per player
+                points_per_player = points / len(selected_players) if selected_players else 0
+            else:
+                event_type = 'team'    # Team points only, no individual players
+                points_per_player = 0
             
             # Create or update score
             score, created = SimpleEventScore.objects.get_or_create(
@@ -1015,16 +1023,29 @@ def simple_event_scoring(request):
                 score.notes = notes
                 score.save()
             
-            # Add participants if it's a hybrid event
-            if event_type == 'hybrid' and participants:
-                participant_players = Player.objects.filter(id__in=participants, team=team_code, is_active=True)
-                score.participants.set(participant_players)
+            # Handle player selection
+            if selected_players:
+                # Get valid players from the selected team
+                valid_players = Player.objects.filter(
+                    id__in=selected_players, 
+                    team=team_code, 
+                    is_active=True
+                )
+                score.participants.set(valid_players)
+                
+                # Award individual points to each selected player
+                for player in valid_players:
+                    player.score += int(points_per_player)
+                    player.save(update_fields=['score'])
+                    
+                player_info = f" ({len(valid_players)} players selected)"
             else:
                 score.participants.clear()
+                player_info = " (team score only)"
             
             action = "Created" if created else "Updated"
             team_name = TeamConfiguration.get_team_name(team_code)
-            messages.success(request, f'{action} score: {event.name} - {team_name} - {points} points')
+            messages.success(request, f'{action} score: {event.name} - {team_name} - {points} points{player_info}')
             
         except Exception as e:
             messages.error(request, f'Error saving score: {str(e)}')
@@ -1034,24 +1055,29 @@ def simple_event_scoring(request):
     # GET request - show the form
     events = Event.objects.filter(is_active=True).order_by('name')
     teams = TeamConfiguration.objects.filter(is_active=True).order_by('team_code')
-    players = Player.objects.filter(is_active=True).order_by('team', 'name')
+    all_players = Player.objects.filter(is_active=True).order_by('team', 'name')
     existing_scores = SimpleEventScore.objects.select_related('event').prefetch_related('participants').order_by('-created_at')[:20]
     
-    # Group players by team for easier selection
-    teams_with_players = {}
+    # Group players by team for JavaScript
+    import json
+    players_by_team = {}
     for team in teams:
-        team_players = players.filter(team=team.team_code)
-        teams_with_players[team] = team_players
+        team_players = all_players.filter(team=team.team_code)
+        players_by_team[team.team_code] = [
+            {'id': player.id, 'name': player.name} 
+            for player in team_players
+        ]
     
     context = {
         'events': events,
         'teams': teams,
-        'teams_with_players': teams_with_players,
+        'players_by_team': players_by_team,
+        'players_by_team_json': json.dumps(players_by_team),  # JSON version for JavaScript
         'existing_scores': existing_scores,
-        'page_title': 'Simple Event Scoring'
+        'page_title': 'Simple Event Scoring - Updated'
     }
     
-    return render(request, 'core/simple_event_scoring.html', context)
+    return render(request, 'core/simple_event_scoring_v2.html', context)
 
 @staff_member_required  
 def delete_simple_score(request, score_id):

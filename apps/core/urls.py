@@ -25,7 +25,9 @@ urlpatterns = [
     # Team Management (works without static files)
     path('team-management/', views.team_management, name='team_management'),
     
-    # Simple Event Scoring (admin only)
+    # Simple Event Scoring (admin only) - Multiple access points
     path('admin/simple-scoring/', views.simple_event_scoring, name='simple_event_scoring'),
+    path('simple-scoring/', views.simple_event_scoring, name='simple_scoring_direct'),  # Direct access
+    path('event-scoring/', views.simple_event_scoring, name='event_scoring'),  # Alternative name
     path('admin/simple-scoring/delete/<int:score_id>/', views.delete_simple_score, name='delete_simple_score'),
 ]
