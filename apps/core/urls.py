@@ -24,4 +24,8 @@ urlpatterns = [
     
     # Team Management (works without static files)
     path('team-management/', views.team_management, name='team_management'),
+    
+    # Simple Event Scoring (admin only)
+    path('admin/simple-scoring/', views.simple_event_scoring, name='simple_event_scoring'),
+    path('admin/simple-scoring/delete/<int:score_id>/', views.delete_simple_score, name='delete_simple_score'),
 ]

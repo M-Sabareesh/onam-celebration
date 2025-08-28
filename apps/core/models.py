@@ -575,3 +575,59 @@ class TeamEventParticipation(models.Model):
         status = "✓" if self.participated else "✗"
         return f"{status} {self.player.name} - {self.event_score.event.name}"
 
+
+# Simple Event Scoring Model for Admin Use
+class SimpleEventScore(models.Model):
+    """Simple event scoring system for admins"""
+    EVENT_TYPES = [
+        ('team', 'Team Event'),
+        ('individual', 'Individual Event'),
+        ('hybrid', 'Hybrid (Team with Individual Participants)'),
+    ]
+    
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='simple_scores')
+    team = models.CharField(max_length=20, choices=Player.TEAM_CHOICES, help_text="Team to award points to")
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES, default='team')
+    points = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="Points awarded")
+    
+    # For hybrid events - track individual participants
+    participants = models.ManyToManyField(Player, blank=True, 
+                                        help_text="Individual participants (for hybrid events)")
+    
+    notes = models.TextField(blank=True, help_text="Optional notes about the scoring")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['event', 'team']
+        ordering = ['-points', 'team']
+        verbose_name = "Simple Event Score"
+        verbose_name_plural = "Simple Event Scores"
+    
+    def __str__(self):
+        return f"{self.event.title} - {self.get_team_display()} - {self.points} pts"
+    
+    def get_team_display(self):
+        """Get team display name"""
+        try:
+            return TeamConfiguration.get_team_name(self.team)
+        except:
+            return dict(Player.TEAM_CHOICES).get(self.team, self.team)
+    
+    @property
+    def participant_count(self):
+        """Get number of participants"""
+        return self.participants.count()
+    
+    def save(self, *args, **kwargs):
+        """Save score and update player scores for hybrid events"""
+        super().save(*args, **kwargs)
+        
+        # For hybrid events, distribute points to individual participants
+        if self.event_type == 'hybrid' and self.participants.exists() and self.points > 0:
+            points_per_participant = self.points / self.participants.count()
+            for participant in self.participants.all():
+                # Add points to participant's score
+                participant.score += int(points_per_participant)
+                participant.save(update_fields=['score'])
+

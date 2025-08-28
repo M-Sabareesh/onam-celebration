@@ -8,7 +8,7 @@ from django.utils.html import format_html
 from django.db.models import Q
 from .models import (Player, GameSession, TreasureHuntQuestion, PlayerAnswer, Event, EventParticipation, 
                     EventVote, EventScore, IndividualParticipation, IndividualEventScore, IndividualEventVote,
-                    TeamEventParticipation, TeamConfiguration)
+                    TeamEventParticipation, TeamConfiguration, SimpleEventScore)
 
 
 # Enhanced Team Management Admin
@@ -969,6 +969,47 @@ class IndividualEventVoteAdmin(admin.ModelAdmin):
         return form
 
 
+# Simple Event Scoring Admin
+@admin.register(SimpleEventScore)
+class SimpleEventScoreAdmin(admin.ModelAdmin):
+    """Clean admin interface for simple event scoring"""
+    list_display = ('event', 'get_team_display', 'event_type', 'points', 'participant_count', 'created_at')
+    list_filter = ('event_type', 'event', 'team', 'created_at')
+    search_fields = ('event__title', 'team', 'notes')
+    ordering = ('-created_at',)
+    
+    fieldsets = (
+        ('Event Information', {
+            'fields': ('event', 'team', 'event_type', 'points')
+        }),
+        ('Participants (for Hybrid Events)', {
+            'fields': ('participants',),
+            'classes': ('collapse',),
+        }),
+        ('Additional Information', {
+            'fields': ('notes', 'created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+    
+    readonly_fields = ('created_at', 'updated_at', 'participant_count')
+    filter_horizontal = ('participants',)
+    
+    def get_team_display(self, obj):
+        return obj.get_team_display()
+    get_team_display.short_description = "Team"
+    get_team_display.admin_order_field = 'team'
+    
+    def participant_count(self, obj):
+        return obj.participant_count
+    participant_count.short_description = "Participants"
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # Filter participants to only show active players
+        form.base_fields['participants'].queryset = Player.objects.filter(is_active=True).order_by('team', 'name')
+        return form
+
 # Register with default admin as well for compatibility
 admin.site.register(Player, PlayerAdmin)
 admin.site.register(GameSession, GameSessionAdmin)
@@ -983,3 +1024,4 @@ admin.site.register(EventScore, EventScoreAdmin)
 admin.site.register(IndividualParticipation, IndividualParticipationAdmin)
 admin.site.register(IndividualEventScore, IndividualEventScoreAdmin)
 admin.site.register(IndividualEventVote, IndividualEventVoteAdmin)
+admin.site.register(SimpleEventScore, SimpleEventScoreAdmin)

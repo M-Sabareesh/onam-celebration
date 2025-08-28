@@ -8,7 +8,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.utils import timezone
 from datetime import timedelta
-from .models import Player, GameSession, TreasureHuntQuestion, PlayerAnswer
+from .models import Player, GameSession, TreasureHuntQuestion, PlayerAnswer, SimpleEventScore
+from django.contrib.admin.views.decorators import staff_member_required
 
 
 class HomeView(TemplateView):
@@ -978,3 +979,92 @@ def team_management(request):
         'teams': sorted(teams, key=lambda x: x['team_code']),
         'success': 'success' in request.GET
     })
+
+
+@staff_member_required
+def simple_event_scoring(request):
+    """Simple event scoring interface for admins"""
+    from .models import Event, Player, SimpleEventScore, TeamConfiguration
+    
+    if request.method == 'POST':
+        event_id = request.POST.get('event')
+        team_code = request.POST.get('team')
+        points = request.POST.get('points', 0)
+        event_type = request.POST.get('event_type', 'team')
+        participants = request.POST.getlist('participants')
+        notes = request.POST.get('notes', '')
+        
+        try:
+            event = get_object_or_404(Event, id=event_id, is_active=True)
+            points = float(points) if points else 0
+            
+            # Create or update score
+            score, created = SimpleEventScore.objects.get_or_create(
+                event=event,
+                team=team_code,
+                defaults={
+                    'event_type': event_type,
+                    'points': points,
+                    'notes': notes
+                }
+            )
+            
+            if not created:
+                score.event_type = event_type
+                score.points = points
+                score.notes = notes
+                score.save()
+            
+            # Add participants if it's a hybrid event
+            if event_type == 'hybrid' and participants:
+                participant_players = Player.objects.filter(id__in=participants, team=team_code, is_active=True)
+                score.participants.set(participant_players)
+            else:
+                score.participants.clear()
+            
+            action = "Created" if created else "Updated"
+            team_name = TeamConfiguration.get_team_name(team_code)
+            messages.success(request, f'{action} score: {event.title} - {team_name} - {points} points')
+            
+        except Exception as e:
+            messages.error(request, f'Error saving score: {str(e)}')
+        
+        return redirect('core:simple_event_scoring')
+    
+    # GET request - show the form
+    events = Event.objects.filter(is_active=True).order_by('title')
+    teams = TeamConfiguration.objects.filter(is_active=True).order_by('team_code')
+    players = Player.objects.filter(is_active=True).order_by('team', 'name')
+    existing_scores = SimpleEventScore.objects.select_related('event').prefetch_related('participants').order_by('-created_at')[:20]
+    
+    # Group players by team for easier selection
+    teams_with_players = {}
+    for team in teams:
+        team_players = players.filter(team=team.team_code)
+        teams_with_players[team] = team_players
+    
+    context = {
+        'events': events,
+        'teams': teams,
+        'teams_with_players': teams_with_players,
+        'existing_scores': existing_scores,
+        'page_title': 'Simple Event Scoring'
+    }
+    
+    return render(request, 'core/simple_event_scoring.html', context)
+
+@staff_member_required  
+def delete_simple_score(request, score_id):
+    """Delete a simple event score"""
+    from .models import SimpleEventScore
+    if request.method == 'POST':
+        try:
+            score = get_object_or_404(SimpleEventScore, id=score_id)
+            event_name = score.event.title
+            team_name = score.get_team_display()
+            score.delete()
+            messages.success(request, f'Deleted score: {event_name} - {team_name}')
+        except Exception as e:
+            messages.error(request, f'Error deleting score: {str(e)}')
+    
+    return redirect('core:simple_event_scoring')
