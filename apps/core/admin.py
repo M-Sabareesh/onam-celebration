@@ -756,6 +756,9 @@ class EventScoreAdmin(admin.ModelAdmin):
     
     class Media:
         js = ('admin/js/vendor/jquery/jquery.min.js', 'js/admin_team_filter.js')
+        css = {
+            'all': ('css/admin_enhancements.css',)
+        }
     
     fieldsets = (
         ('Score Information', {
@@ -972,15 +975,19 @@ class IndividualEventVoteAdmin(admin.ModelAdmin):
 # Simple Event Scoring Admin
 @admin.register(SimpleEventScore)
 class SimpleEventScoreAdmin(admin.ModelAdmin):
-    """Clean admin interface for simple event scoring"""
-    list_display = ('event', 'get_team_display', 'event_type', 'points', 'participant_count', 'created_at')
-    list_filter = ('event_type', 'event', 'team', 'created_at')
-    search_fields = ('event__title', 'team', 'notes')
+    """Clean admin interface for simple event scoring with auto-calculation"""
+    list_display = ('event', 'get_team_display', 'event_type', 'points', 'auto_calc_status', 'participant_count', 'created_at')
+    list_filter = ('event_type', 'auto_calculate_points', 'event', 'team', 'created_at')
+    search_fields = ('event__name', 'team', 'notes')
     ordering = ('-created_at',)
     
     fieldsets = (
         ('Event Information', {
-            'fields': ('event', 'team', 'event_type', 'points')
+            'fields': ('event', 'team', 'event_type')
+        }),
+        ('Points Configuration', {
+            'fields': ('auto_calculate_points', 'points_per_participant', 'points'),
+            'description': 'Use auto-calculation to automatically compute points based on participants'
         }),
         ('Participants (for Hybrid Events)', {
             'fields': ('participants',),
@@ -995,10 +1002,22 @@ class SimpleEventScoreAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at', 'participant_count')
     filter_horizontal = ('participants',)
     
+    class Media:
+        js = ('js/admin_team_filter.js',)
+        css = {
+            'all': ('css/admin_enhancements.css',)
+        }
+    
     def get_team_display(self, obj):
         return obj.get_team_display()
     get_team_display.short_description = "Team"
     get_team_display.admin_order_field = 'team'
+    
+    def auto_calc_status(self, obj):
+        if obj.auto_calculate_points:
+            return format_html('<span style="color: green;">✓ Auto</span>')
+        return format_html('<span style="color: gray;">Manual</span>')
+    auto_calc_status.short_description = "Calculation"
     
     def participant_count(self, obj):
         return obj.participant_count
@@ -1009,6 +1028,36 @@ class SimpleEventScoreAdmin(admin.ModelAdmin):
         # Filter participants to only show active players
         form.base_fields['participants'].queryset = Player.objects.filter(is_active=True).order_by('team', 'name')
         return form
+    
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        
+        # Show helpful messages based on configuration
+        if obj.auto_calculate_points:
+            if obj.event_type == 'hybrid':
+                participant_count = obj.participants.count()
+                calculated_points = obj.points_per_participant * participant_count
+                self.message_user(
+                    request, 
+                    f"✅ Auto-calculated: {participant_count} participants × {obj.points_per_participant} points = {calculated_points} total points"
+                )
+            elif obj.event_type == 'team':
+                team_count = Player.objects.filter(team=obj.team, is_active=True).count()
+                calculated_points = obj.points_per_participant * team_count
+                self.message_user(
+                    request, 
+                    f"✅ Auto-calculated: {team_count} team members × {obj.points_per_participant} points = {calculated_points} total points"
+                )
+        else:
+            self.message_user(request, f"✅ Manual points: {obj.points} points awarded to {obj.get_team_display()}")
+    
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        # Make points readonly if auto-calculation is enabled
+        if obj and obj.auto_calculate_points:
+            if 'points' not in readonly_fields:
+                readonly_fields.append('points')
+        return readonly_fields
 
 # Register with default admin as well for compatibility
 admin.site.register(Player, PlayerAdmin)

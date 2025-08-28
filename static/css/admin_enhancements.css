@@ -1,0 +1,52 @@
+/* Auto-calculation styling for admin forms */
+.auto-calculated {
+    background-color: #f0f8ff !important;
+    border-left: 4px solid #007cba !important;
+}
+
+.auto-calculated input {
+    background-color: #f9f9f9 !important;
+    color: #666 !important;
+    font-style: italic;
+}
+
+.field-auto_calculate_points label::after {
+    content: " 💡";
+}
+
+.field-points_per_participant label::after {
+    content: " 👥";
+}
+
+/* Team filtering indicators */
+.team-filtered {
+    border-left: 3px solid #28a745 !important;
+}
+
+.team-filtered select {
+    background-color: #f8fff8 !important;
+}
+
+/* Help text styling */
+.help {
+    font-size: 11px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* Admin list display improvements */
+.admin-auto-calc-status {
+    font-weight: bold;
+}
+
+/* Responsive improvements for small screens */
+@media (max-width: 768px) {
+    .field-participants .selector {
+        width: 100% !important;
+    }
+    
+    .field-participants .selector .selector-available,
+    .field-participants .selector .selector-chosen {
+        width: 45% !important;
+    }
+}

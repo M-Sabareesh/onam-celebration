@@ -590,6 +590,12 @@ class SimpleEventScore(models.Model):
     event_type = models.CharField(max_length=20, choices=EVENT_TYPES, default='team')
     points = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="Points awarded")
     
+    # Auto calculation fields
+    points_per_participant = models.DecimalField(max_digits=6, decimal_places=2, default=0, 
+                                               help_text="Points awarded per participating player")
+    auto_calculate_points = models.BooleanField(default=False, 
+                                              help_text="Automatically calculate total points based on participants")
+    
     # For hybrid events - track individual participants
     participants = models.ManyToManyField(Player, blank=True, 
                                         help_text="Individual participants (for hybrid events)")
@@ -620,7 +626,18 @@ class SimpleEventScore(models.Model):
         return self.participants.count()
     
     def save(self, *args, **kwargs):
-        """Save score and update player scores for hybrid events"""
+        """Save score and update player scores, with auto-calculation support"""
+        # Auto-calculate points if enabled
+        if self.auto_calculate_points and self.points_per_participant > 0:
+            if self.event_type == 'hybrid':
+                # For hybrid events, use participant count
+                participant_count = self.participants.count()
+                self.points = self.points_per_participant * participant_count
+            elif self.event_type == 'team':
+                # For team events, use all active team members
+                team_player_count = Player.objects.filter(team=self.team, is_active=True).count()
+                self.points = self.points_per_participant * team_player_count
+        
         super().save(*args, **kwargs)
         
         # For hybrid events, distribute points to individual participants
@@ -630,4 +647,13 @@ class SimpleEventScore(models.Model):
                 # Add points to participant's score
                 participant.score += int(points_per_participant)
                 participant.save(update_fields=['score'])
+        
+        # For team events, distribute points to all team members
+        elif self.event_type == 'team' and self.points > 0:
+            team_players = Player.objects.filter(team=self.team, is_active=True)
+            if team_players.exists():
+                points_per_player = self.points / team_players.count()
+                for player in team_players:
+                    player.score += int(points_per_player)
+                    player.save(update_fields=['score'])
 

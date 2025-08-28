@@ -219,7 +219,7 @@ class LeaderboardView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from .models import Event, EventVote
+        from .models import Event, EventVote, PlayerAnswer
         from django.db.models import Avg, Count, Sum
         
         # Try to import models, but handle if they don't exist
@@ -260,11 +260,17 @@ class LeaderboardView(TemplateView):
                 'event_count': 0
             }
         
-        # Calculate treasure hunt scores and collect team players
+        # Calculate treasure hunt scores (Chodya Onam only) and collect team players
         for player in Player.objects.all():
             team = player.team
             if team in team_data:
-                team_data[team]['treasure_hunt_score'] += player.score
+                # Get ONLY treasure hunt score (not total player.score which includes team events)
+                treasure_hunt_only = PlayerAnswer.objects.filter(
+                    player=player, 
+                    is_correct=True
+                ).aggregate(Sum('points_awarded'))['points_awarded__sum'] or 0
+                
+                team_data[team]['treasure_hunt_score'] += treasure_hunt_only
                 team_data[team]['players'].append(player)
         
         # Calculate individual event scores that contribute to team points
