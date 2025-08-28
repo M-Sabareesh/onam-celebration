@@ -389,7 +389,7 @@ class LeaderboardView(TemplateView):
         try:
             from apps.core.models import Event, EventScore, TeamConfiguration
             active_events = Event.objects.filter(is_active=True).order_by('created_at')
-            event_names = [event.title for event in active_events]  # Use title, not name
+            event_names = [event.name for event in active_events]  # Use name
             
             # If no events exist, create sample events
             if not event_names:
@@ -1024,7 +1024,7 @@ def simple_event_scoring(request):
             
             action = "Created" if created else "Updated"
             team_name = TeamConfiguration.get_team_name(team_code)
-            messages.success(request, f'{action} score: {event.title} - {team_name} - {points} points')
+            messages.success(request, f'{action} score: {event.name} - {team_name} - {points} points')
             
         except Exception as e:
             messages.error(request, f'Error saving score: {str(e)}')
@@ -1032,7 +1032,7 @@ def simple_event_scoring(request):
         return redirect('core:simple_event_scoring')
     
     # GET request - show the form
-    events = Event.objects.filter(is_active=True).order_by('title')
+    events = Event.objects.filter(is_active=True).order_by('name')
     teams = TeamConfiguration.objects.filter(is_active=True).order_by('team_code')
     players = Player.objects.filter(is_active=True).order_by('team', 'name')
     existing_scores = SimpleEventScore.objects.select_related('event').prefetch_related('participants').order_by('-created_at')[:20]
@@ -1060,7 +1060,7 @@ def delete_simple_score(request, score_id):
     if request.method == 'POST':
         try:
             score = get_object_or_404(SimpleEventScore, id=score_id)
-            event_name = score.event.title
+            event_name = score.event.name
             team_name = score.get_team_display()
             score.delete()
             messages.success(request, f'Deleted score: {event_name} - {team_name}')

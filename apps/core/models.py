@@ -605,7 +605,7 @@ class SimpleEventScore(models.Model):
         verbose_name_plural = "Simple Event Scores"
     
     def __str__(self):
-        return f"{self.event.title} - {self.get_team_display()} - {self.points} pts"
+        return f"{self.event.name} - {self.get_team_display()} - {self.points} pts"
     
     def get_team_display(self):
         """Get team display name"""
