@@ -629,8 +629,10 @@ class TreasureHuntView(TemplateView):
                 answer.photo_answer = photo
                 answer.save()
                 
-                # Try to upload to Google Photos if enabled (graceful failure)
+                # Try to upload to Google Photos if enabled
                 google_photos_success = False
+                google_photos_error = None
+                
                 if (GOOGLE_PHOTOS_AVAILABLE and 
                     google_photos_service and 
                     getattr(settings, 'GOOGLE_PHOTOS_ENABLED', False)):
@@ -651,18 +653,30 @@ class TreasureHuntView(TemplateView):
                             answer.google_photos_product_url = photo_info.get('product_url')
                             answer.save()
                             
-                            google_photos_success = True
-                            logger.info(f"Successfully uploaded photo to Google Photos for player {player.name}, question {question.order}")
+                            # Check if this was a real upload or simulated
+                            if photo_info.get('simulated'):
+                                google_photos_success = 'simulated'
+                                logger.info(f"Simulated Google Photos upload for player {player.name}, question {question.order}")
+                            else:
+                                google_photos_success = True
+                                logger.info(f"Successfully uploaded photo to Google Photos for player {player.name}, question {question.order}")
+                        else:
+                            google_photos_error = "Upload failed - no response from Google Photos"
                     
                     except Exception as e:
+                        google_photos_error = str(e)
                         logger.warning(f"Google Photos upload failed for player {player.name}, question {question.order}: {e}")
-                        # Continue without Google Photos backup
                 
-                # Show appropriate success message
-                if google_photos_success:
-                    messages.success(request, f'✅ Photo uploaded for question {question.order} and backed up to Google Photos!')
+                # Show appropriate success message based on upload status
+                if google_photos_success is True:
+                    messages.success(request, f'✅ Photo uploaded for question {question.order} and successfully backed up to Google Photos!')
+                elif google_photos_success == 'simulated':
+                    messages.success(request, f'✅ Photo uploaded for question {question.order}! (Google Photos simulation mode - real upload will work when credentials are configured)')
+                elif google_photos_error:
+                    messages.success(request, f'✅ Photo uploaded for question {question.order}!')
+                    messages.warning(request, f'⚠️ Google Photos backup failed: {google_photos_error}')
                 elif getattr(settings, 'GOOGLE_PHOTOS_ENABLED', False):
-                    messages.success(request, f'✅ Photo uploaded for question {question.order}! (Stored locally - Google Photos backup will be set up later)')
+                    messages.success(request, f'✅ Photo uploaded for question {question.order}! (Google Photos backup will be set up later)')
                 else:
                     messages.success(request, f'✅ Photo uploaded for question {question.order}!')
             else:

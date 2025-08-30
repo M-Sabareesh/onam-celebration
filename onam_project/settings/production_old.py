@@ -48,10 +48,6 @@ DATABASES = {
             'options': '-c default_transaction_isolation=serializable'
         },
         'CONN_MAX_AGE': 0,  # Disable connection pooling
-        'CONN_HEALTH_CHECKS': True,
-    }
-}
-
 # Static files configuration for Render
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -126,3 +122,6 @@ else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 print("Production settings loaded successfully")
+
+# SMS Backend - Use actual SMS service in production
+SMS_BACKEND = 'twilio'  # or 'messagebird'
