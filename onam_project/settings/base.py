@@ -243,3 +243,14 @@ LOGGING = {
         },
     },
 }
+
+# Google Photos Integration Settings
+GOOGLE_PHOTOS_ENABLED = env.bool('GOOGLE_PHOTOS_ENABLED', default=False)
+GOOGLE_PHOTOS_ALBUM_ID = env('GOOGLE_PHOTOS_ALBUM_ID', default=None)
+GOOGLE_PHOTOS_ALBUM_NAME = env('GOOGLE_PHOTOS_ALBUM_NAME', default='Onam Celebration - Treasure Hunt Photos')
+
+# Google Photos API Credentials
+GOOGLE_PHOTOS_CREDENTIALS_FILE = env('GOOGLE_PHOTOS_CREDENTIALS_FILE', 
+                                   default=str(BASE_DIR / 'google_photos_credentials.json'))
+GOOGLE_PHOTOS_TOKEN_FILE = env('GOOGLE_PHOTOS_TOKEN_FILE', 
+                             default=str(BASE_DIR / 'google_photos_token.json'))

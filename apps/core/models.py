@@ -150,6 +150,15 @@ class PlayerAnswer(models.Model):
     question = models.ForeignKey(TreasureHuntQuestion, on_delete=models.CASCADE)
     text_answer = models.TextField(blank=True)
     photo_answer = models.ImageField(upload_to='treasure_hunt_photos/', blank=True)
+    
+    # Google Photos integration fields
+    google_photos_media_id = models.CharField(max_length=200, blank=True, null=True,
+                                            help_text="Google Photos media item ID")
+    google_photos_url = models.URLField(blank=True, null=True,
+                                      help_text="Direct Google Photos URL")
+    google_photos_product_url = models.URLField(blank=True, null=True,
+                                              help_text="Google Photos product page URL")
+    
     submitted_at = models.DateTimeField(auto_now_add=True)
     is_correct = models.BooleanField(default=False)
     points_awarded = models.PositiveIntegerField(default=0)
@@ -159,6 +168,20 @@ class PlayerAnswer(models.Model):
     
     def __str__(self):
         return f"{self.player.name} - Q{self.question.order}"
+    
+    @property
+    def has_google_photos_backup(self):
+        """Check if this answer has been backed up to Google Photos"""
+        return bool(self.google_photos_media_id)
+    
+    def get_display_photo_url(self, width=800, height=600):
+        """Get the best available photo URL for display"""
+        if self.google_photos_url:
+            # Return Google Photos URL with size parameters for better mobile performance
+            return f"{self.google_photos_url}=w{width}-h{height}"
+        elif self.photo_answer:
+            return self.photo_answer.url
+        return None
 
 
 class Event(models.Model):
