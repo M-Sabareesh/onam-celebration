@@ -5,6 +5,7 @@ Production settings for Render deployment
 from .base import *
 import os
 import logging
+import dj_database_url
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -33,24 +34,30 @@ SESSION_COOKIE_HTTPONLY = True
 # Disable strict referer checking for admin
 SECURE_REFERRER_POLICY = 'no-referrer-when-downgrade'
 
-# Database configuration for Render PostgreSQL
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DATABASE_NAME', ''),
-        'USER': os.environ.get('DATABASE_USER', ''),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
-        'HOST': os.environ.get('DATABASE_HOST', ''),
-        'PORT': os.environ.get('DATABASE_PORT', '5432'),
-        'OPTIONS': {
-            'sslmode': 'prefer',  # Changed from 'require' to 'prefer'
-            'connect_timeout': 30,
-            'options': '-c default_transaction_isolation=serializable'
-        },
-        'CONN_MAX_AGE': 0,  # Disable connection pooling
-        'CONN_HEALTH_CHECKS': True,
+# Database configuration for Neon Postgres via DATABASE_URL
+db_url = os.environ.get('DATABASE_URL')
+if db_url:
+    DATABASES = {
+        'default': dj_database_url.parse(db_url)
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DATABASE_NAME', ''),
+            'USER': os.environ.get('DATABASE_USER', ''),
+            'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
+            'HOST': os.environ.get('DATABASE_HOST', ''),
+            'PORT': os.environ.get('DATABASE_PORT', '5432'),
+            'OPTIONS': {
+                'sslmode': 'prefer',
+                'connect_timeout': 30,
+                'options': '-c default_transaction_isolation=serializable'
+            },
+            'CONN_MAX_AGE': 0,  # Disable connection pooling
+            'CONN_HEALTH_CHECKS': True,
+        }
+    }
 
 # Static files configuration for Render
 STATIC_URL = '/static/'
