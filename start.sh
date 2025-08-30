@@ -10,6 +10,10 @@ echo "🚀 Starting Onam Celebration App on Render..."
 echo "📊 Running database migrations..."
 python manage.py migrate
 
+# Fix Google Photos database schema (for treasure hunt photos)
+echo "🔧 Fixing Google Photos database schema..."
+python manage.py fix_google_photos --fix-db
+
 # Check if we need to restore data
 echo "🔍 Checking if data restore is needed..."
 

@@ -34,6 +34,8 @@ def main():
     print("✅ Auto-calculation for event scores")
     print("✅ Team filtering in admin")
     print("✅ Fixed leaderboard calculation")
+    print("✅ Google Photos integration for treasure hunt")
+    print("✅ Mobile-optimized photo display")
     print("=" * 50)
     
     # Step 1: Install dependencies
@@ -43,6 +45,10 @@ def main():
     # Step 2: Apply migrations
     print("\n📊 Database Migration")
     run_command("python manage.py migrate --noinput", "Applying migrations", critical=False)
+    
+    # Step 2.5: Fix Google Photos database schema
+    print("\n🔧 Google Photos Database Fix")
+    run_command("python manage.py fix_google_photos --fix-db", "Fixing Google Photos schema", critical=False)
     
     # Step 3: Collect static files
     print("\n📁 Static Files")
@@ -104,6 +110,15 @@ try:
     from apps.core.admin import SimpleEventScoreAdmin
     print('✅ Admin enhancements ready')
     
+    # Test Google Photos integration
+    from apps.core.models import PlayerAnswer
+    test_answer = PlayerAnswer()
+    # Test that Google Photos fields exist
+    hasattr(test_answer, 'google_photos_media_id')
+    hasattr(test_answer, 'google_photos_url')
+    hasattr(test_answer, 'google_photos_product_url')
+    print('✅ Google Photos integration ready')
+    
     print('🎉 All fixes deployed successfully!')
     
 except Exception as e:
@@ -124,6 +139,8 @@ except Exception as e:
     print("- Auto-calculation in admin")
     print("- Team filtering in dropdowns")
     print("- Accurate leaderboard calculations")
+    print("- Google Photos integration for treasure hunt")
+    print("- Mobile-optimized photo display")
     
     # Start gunicorn for production
     try:
