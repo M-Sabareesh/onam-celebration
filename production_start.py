@@ -50,6 +50,10 @@ def main():
     print("\n🔧 Google Photos Database Fix")
     run_command("python manage.py fix_google_photos --fix-db", "Fixing Google Photos schema", critical=False)
     
+    # Step 2.6: Debug media files if needed
+    print("\n🔍 Media Files Check")
+    run_command("python manage.py debug_media --show-urls", "Checking media configuration", critical=False)
+    
     # Step 3: Collect static files
     print("\n📁 Static Files")
     run_command("python manage.py collectstatic --noinput", "Collecting static files", critical=False)

@@ -38,16 +38,29 @@
                     
                     <!-- Display question image if it exists -->
                     {% if question.question_image %}
-                        <div class="text-center mb-4">
+                        <div class="text-center mb-4 question-image-container">
                             <img src="{{ question.question_image.url }}" 
-                                 class="img-fluid rounded shadow-lg" 
+                                 class="img-fluid rounded shadow-lg question-image" 
                                  style="max-width: 100%; max-height: 400px; object-fit: contain;"
                                  alt="Question Image"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            <div style="display: none; padding: 20px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
-                                <i class="fas fa-image text-muted"></i>
-                                <p class="mb-0 text-muted">Image could not be loaded: {{ question.question_image.name }}</p>
-                                <small class="text-muted">URL: {{ question.question_image.url }}</small>
+                                 onload="this.classList.add('loaded')"
+                                 onerror="handleImageError(this, '{{ question.question_image.name }}', '{{ question.question_image.url }}')">
+                            <div class="image-error-fallback" style="display: none; padding: 20px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; margin-top: 10px;">
+                                <div class="text-center">
+                                    <i class="fas fa-image text-muted fa-3x mb-3"></i>
+                                    <h6 class="text-muted">Image Loading Issue</h6>
+                                    <p class="mb-0 text-muted small">File: <code id="error-filename"></code></p>
+                                    <p class="mb-2 text-muted small">URL: <code id="error-url"></code></p>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="retryImageLoad(this)">
+                                        <i class="fas fa-refresh me-1"></i>Try Again
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="image-loading" style="display: block; text-align: center; padding: 40px;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading image...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Loading question image...</p>
                             </div>
                         </div>
                     {% endif %}
@@ -81,15 +94,21 @@
                                                 </small>
                                             </div>
                                         {% else %}
-                                            <!-- Fallback to local storage -->
+                                            <!-- Fallback to local storage with enhanced mobile display -->
                                             <img src="{{ answer.photo_answer.url }}" 
-                                                 class="img-thumbnail" 
+                                                 class="img-thumbnail mobile-optimized-photo" 
                                                  style="max-width: 100%; max-height: 300px; object-fit: cover;"
                                                  alt="Your uploaded photo"
-                                                 onclick="openPhotoModal('{{ answer.photo_answer.url }}', '{{ player.name }}', '{{ question.order }}')">
+                                                 onclick="openPhotoModal('{{ answer.photo_answer.url }}', '{{ player.name }}', '{{ question.order }}')"
+                                                 onerror="handlePhotoError(this)">
                                             <div class="mt-1">
                                                 <small class="text-muted">
                                                     <i class="fas fa-server me-1"></i>Stored locally
+                                                    {% if settings.GOOGLE_PHOTOS_ENABLED %}
+                                                        <br><span class="text-info">
+                                                            <i class="fas fa-info-circle me-1"></i>Google Photos backup will be available when credentials are configured
+                                                        </span>
+                                                    {% endif %}
                                                 </small>
                                             </div>
                                         {% endif %}
@@ -359,10 +378,38 @@
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
+
+/* Question image loading states */
+.question-image-container {
+    position: relative;
+}
+
+.question-image {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.question-image.loaded {
+    opacity: 1;
+}
+
+.image-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    z-index: 1;
+}
+
+.question-image.loaded + .image-error-fallback + .image-loading {
+    display: none !important;
+}
 </style>
 
 <script>
-// Photo modal functionality
+// JavaScript for photo modal functionality
 function openPhotoModal(photoUrl, playerName, questionOrder) {
     const modal = new bootstrap.Modal(document.getElementById('photoModal'));
     const modalPhoto = document.getElementById('modalPhoto');
@@ -372,6 +419,64 @@ function openPhotoModal(photoUrl, playerName, questionOrder) {
     modalPhotoInfo.textContent = `Player: ${playerName} | Question ${questionOrder}`;
     
     modal.show();
+}
+
+// Enhanced image error handling
+function handleImageError(img, filename, url) {
+    console.error(`Failed to load image: ${filename} from ${url}`);
+    
+    // Hide the image and loading indicator
+    img.style.display = 'none';
+    const loadingDiv = img.parentElement.querySelector('.image-loading');
+    if (loadingDiv) loadingDiv.style.display = 'none';
+    
+    // Show error fallback
+    const errorDiv = img.parentElement.querySelector('.image-error-fallback');
+    if (errorDiv) {
+        errorDiv.style.display = 'block';
+        const filenameEl = errorDiv.querySelector('#error-filename');
+        const urlEl = errorDiv.querySelector('#error-url');
+        if (filenameEl) filenameEl.textContent = filename;
+        if (urlEl) urlEl.textContent = url;
+    }
+}
+
+function retryImageLoad(button) {
+    const container = button.closest('.question-image-container');
+    const img = container.querySelector('.question-image');
+    const errorDiv = container.querySelector('.image-error-fallback');
+    const loadingDiv = container.querySelector('.image-loading');
+    
+    // Reset states
+    errorDiv.style.display = 'none';
+    loadingDiv.style.display = 'block';
+    img.style.display = 'block';
+    img.classList.remove('loaded');
+    
+    // Force reload
+    const originalSrc = img.src;
+    img.src = '';
+    setTimeout(() => {
+        img.src = originalSrc + '?t=' + new Date().getTime();
+    }, 100);
+}
+
+// Handle uploaded photo errors
+function handlePhotoError(img) {
+    console.error('Failed to load uploaded photo:', img.src);
+    
+    // Replace with a placeholder
+    img.style.display = 'none';
+    
+    const placeholder = document.createElement('div');
+    placeholder.className = 'alert alert-warning text-center';
+    placeholder.innerHTML = `
+        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+        <p class="mb-0">Photo could not be loaded</p>
+        <small class="text-muted">The image file may have been moved or deleted</small>
+    `;
+    
+    img.parentNode.insertBefore(placeholder, img);
 }
 
 // Enhanced file upload with loading indicator
