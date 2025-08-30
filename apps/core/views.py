@@ -7,10 +7,22 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.core.files.storage import default_storage
 from django.utils import timezone
+from django.conf import settings
 from datetime import timedelta
+import logging
 from .models import Player, GameSession, TreasureHuntQuestion, PlayerAnswer, SimpleEventScore
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
+
+# Import Google Photos service (handle import gracefully)
+try:
+    from .google_photos import google_photos_service
+    GOOGLE_PHOTOS_AVAILABLE = True
+except ImportError:
+    GOOGLE_PHOTOS_AVAILABLE = False
+    google_photos_service = None
+
+logger = logging.getLogger(__name__)
 
 
 class HomeView(TemplateView):
@@ -613,9 +625,42 @@ class TreasureHuntView(TemplateView):
         elif question.question_type == 'photo':
             photo = request.FILES.get('photo_answer')
             if photo:
+                # Save the photo locally first
                 answer.photo_answer = photo
                 answer.save()
-                messages.success(request, f'Photo uploaded for question {question.order}!')
+                
+                # Try to upload to Google Photos if enabled
+                if (GOOGLE_PHOTOS_AVAILABLE and 
+                    google_photos_service and 
+                    getattr(settings, 'GOOGLE_PHOTOS_ENABLED', False)):
+                    
+                    try:
+                        # Upload to Google Photos
+                        photo_info = google_photos_service.upload_photo(
+                            photo_file=photo,
+                            description=f"Treasure Hunt Question {question.order}",
+                            player_name=player.name,
+                            question_order=question.order
+                        )
+                        
+                        if photo_info:
+                            # Update answer with Google Photos info
+                            answer.google_photos_media_id = photo_info.get('media_item_id')
+                            answer.google_photos_url = photo_info.get('base_url')
+                            answer.google_photos_product_url = photo_info.get('product_url')
+                            answer.save()
+                            
+                            logger.info(f"Successfully uploaded photo to Google Photos for player {player.name}, question {question.order}")
+                            messages.success(request, f'Photo uploaded for question {question.order} and backed up to Google Photos!')
+                        else:
+                            logger.warning(f"Failed to upload photo to Google Photos for player {player.name}, question {question.order}")
+                            messages.success(request, f'Photo uploaded for question {question.order}! (Google Photos backup failed)')
+                    
+                    except Exception as e:
+                        logger.error(f"Error uploading to Google Photos: {e}")
+                        messages.success(request, f'Photo uploaded for question {question.order}! (Google Photos backup failed)')
+                else:
+                    messages.success(request, f'Photo uploaded for question {question.order}!')
             else:
                 messages.error(request, 'Please upload a photo.')
         

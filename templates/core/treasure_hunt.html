@@ -61,7 +61,39 @@
                                 {% if answer.text_answer %}
                                     {{ answer.text_answer }}
                                 {% elif answer.photo_answer %}
-                                    <br><img src="{{ answer.photo_answer.url }}" class="img-thumbnail mt-2" style="max-width: 200px;">
+                                    <br>
+                                    <div class="photo-display mt-2">
+                                        {% if answer.google_photos_url %}
+                                            <!-- Use Google Photos URL for better mobile performance -->
+                                            <img src="{{ answer.google_photos_url }}=w400-h300" 
+                                                 class="img-thumbnail mobile-optimized-photo" 
+                                                 style="max-width: 100%; max-height: 300px; object-fit: cover;"
+                                                 alt="Your uploaded photo"
+                                                 onclick="openPhotoModal('{{ answer.google_photos_url }}=w800-h600', '{{ player.name }}', '{{ question.order }}')">
+                                            <div class="mt-1">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-cloud me-1"></i>Backed up to Google Photos
+                                                    {% if answer.google_photos_product_url %}
+                                                        | <a href="{{ answer.google_photos_product_url }}" target="_blank" class="text-decoration-none">
+                                                            <i class="fas fa-external-link-alt"></i> View in Google Photos
+                                                        </a>
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        {% else %}
+                                            <!-- Fallback to local storage -->
+                                            <img src="{{ answer.photo_answer.url }}" 
+                                                 class="img-thumbnail" 
+                                                 style="max-width: 100%; max-height: 300px; object-fit: cover;"
+                                                 alt="Your uploaded photo"
+                                                 onclick="openPhotoModal('{{ answer.photo_answer.url }}', '{{ player.name }}', '{{ question.order }}')">
+                                            <div class="mt-1">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-server me-1"></i>Stored locally
+                                                </small>
+                                            </div>
+                                        {% endif %}
+                                    </div>
                                 {% endif %}
                             {% endwith %}
                         </div>
@@ -170,6 +202,27 @@
     </div>
 </div>
 
+<!-- Photo Modal for better mobile viewing -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="photoModalLabel">Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalPhoto" src="" class="img-fluid rounded" alt="Photo">
+                <div class="mt-2">
+                    <small class="text-muted" id="modalPhotoInfo"></small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .card {
     transition: transform 0.2s;
@@ -185,5 +238,138 @@
 .form-check:hover {
     background-color: #f8f9fa;
 }
+
+/* Mobile-optimized photo styles */
+.mobile-optimized-photo {
+    cursor: pointer;
+    transition: opacity 0.2s;
+    border-radius: 8px;
+}
+.mobile-optimized-photo:hover {
+    opacity: 0.8;
+}
+
+.photo-display {
+    position: relative;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+    .mobile-optimized-photo {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .btn {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Loading indicator for photo uploads */
+.upload-loading {
+    display: none;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.upload-loading.show {
+    display: block;
+}
 </style>
+
+<script>
+// Photo modal functionality
+function openPhotoModal(photoUrl, playerName, questionOrder) {
+    const modal = new bootstrap.Modal(document.getElementById('photoModal'));
+    const modalPhoto = document.getElementById('modalPhoto');
+    const modalPhotoInfo = document.getElementById('modalPhotoInfo');
+    
+    modalPhoto.src = photoUrl;
+    modalPhotoInfo.textContent = `Player: ${playerName} | Question ${questionOrder}`;
+    
+    modal.show();
+}
+
+// Enhanced file upload with loading indicator
+document.addEventListener('DOMContentLoaded', function() {
+    const photoInputs = document.querySelectorAll('input[type="file"][name="photo_answer"]');
+    
+    photoInputs.forEach(input => {
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Please select a valid image file (JPG, PNG, or GIF)');
+                    e.target.value = '';
+                    return;
+                }
+                
+                // Validate file size (max 10MB)
+                const maxSize = 10 * 1024 * 1024; // 10MB
+                if (file.size > maxSize) {
+                    alert('File size too large. Please select an image smaller than 10MB.');
+                    e.target.value = '';
+                    return;
+                }
+                
+                // Show preview if possible
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Create preview element
+                    let preview = input.parentElement.querySelector('.file-preview');
+                    if (!preview) {
+                        preview = document.createElement('div');
+                        preview.className = 'file-preview mt-2';
+                        input.parentElement.appendChild(preview);
+                    }
+                    
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px; max-height: 150px;">
+                        <div class="mt-1">
+                            <small class="text-muted">${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)</small>
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+    
+    // Add loading indicator to photo upload forms
+    const photoForms = document.querySelectorAll('form');
+    photoForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const photoInput = form.querySelector('input[type="file"][name="photo_answer"]');
+            if (photoInput && photoInput.files.length > 0) {
+                // Show loading indicator
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+                submitBtn.disabled = true;
+                
+                // Add loading div
+                let loadingDiv = form.querySelector('.upload-loading');
+                if (!loadingDiv) {
+                    loadingDiv = document.createElement('div');
+                    loadingDiv.className = 'upload-loading alert alert-info';
+                    loadingDiv.innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>Uploading to Google Photos...';
+                    form.appendChild(loadingDiv);
+                }
+                loadingDiv.classList.add('show');
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

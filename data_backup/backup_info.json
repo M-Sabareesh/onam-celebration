@@ -1,0 +1,14 @@
+{
+  "timestamp": "2024-08-25T12:00:00.000Z",
+  "django_version": "4.2.7",
+  "backup_type": "structure_only",
+  "description": "Pre-built backup with Onam treasure hunt questions and events",
+  "files_created": [
+    "questions.json",
+    "events.json",
+    "backup_info.json"
+  ],
+  "questions_count": 5,
+  "events_count": 4,
+  "notes": "This backup contains the core structure for Onam Celebration app. Player data will be generated fresh on each session."
+}
